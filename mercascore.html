@@ -1,0 +1,1385 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MercaScore — Analizador de productos de Mercadona</title>
+<style>
+  :root {
+    --bg: #F5F7FA;
+    --surface: #FFFFFF;
+    --surface-hover: #F8FAF9;
+    --accent: #00C896;
+    --accent-dark: #00A57E;
+    --accent-soft: #E6F9F4;
+    --text: #1A1A2E;
+    --text-muted: #6B7280;
+    --border: #E5E7EB;
+    --shadow: 0 2px 12px rgba(0,0,0,0.06);
+    --shadow-lg: 0 8px 28px rgba(0,0,0,0.10);
+    --green: #00C896;
+    --yellow: #FFC107;
+    --orange: #FF6B35;
+    --red: #EF476F;
+    --chip-grey: #B8BCC6;
+  }
+  [data-theme="dark"] {
+    --bg: #0F1219;
+    --surface: #1A1F2E;
+    --surface-hover: #232938;
+    --accent: #00D9A3;
+    --accent-dark: #00B088;
+    --accent-soft: #142A24;
+    --text: #E8EAF0;
+    --text-muted: #9CA3AF;
+    --border: #2A3142;
+    --shadow: 0 2px 12px rgba(0,0,0,0.4);
+    --shadow-lg: 0 8px 28px rgba(0,0,0,0.6);
+    --chip-grey: #4B5563;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.5;
+    transition: background 0.3s ease, color 0.3s ease;
+  }
+
+  /* ---------- Header ---------- */
+  header {
+    background: var(--surface);
+    box-shadow: var(--shadow);
+    padding: 1.5rem 1.5rem 1rem;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .header-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: 1rem;
+    max-width: 1500px;
+    margin: 0 auto;
+  }
+  .brand h1 {
+    font-size: 2rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .brand h1 .leaf {
+    color: var(--accent);
+    font-size: 1.8rem;
+  }
+  .brand p {
+    color: var(--text-muted);
+    font-size: 0.95rem;
+    margin-top: 0.2rem;
+  }
+  .header-actions {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+  }
+  .counter {
+    font-size: 0.9rem;
+    color: var(--text-muted);
+    background: var(--accent-soft);
+    padding: 0.4rem 0.9rem;
+    border-radius: 999px;
+    font-weight: 500;
+  }
+  .theme-toggle {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    color: var(--text);
+    width: 42px;
+    height: 42px;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 1.2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s, transform 0.2s;
+  }
+  .theme-toggle:hover { transform: rotate(15deg); background: var(--accent-soft); }
+
+  /* ---------- Controls ---------- */
+  .controls {
+    max-width: 1500px;
+    margin: 1.5rem auto;
+    padding: 0 1.5rem;
+    display: grid;
+    grid-template-columns: minmax(220px, 2fr) repeat(3, minmax(160px, 1fr)) auto;
+    gap: 0.8rem;
+    align-items: center;
+  }
+  .controls input, .controls select, .controls button {
+    padding: 0.7rem 0.9rem;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    font-size: 0.95rem;
+    background: var(--surface);
+    color: var(--text);
+    box-shadow: var(--shadow);
+    transition: border-color 0.2s, box-shadow 0.2s;
+    font-family: inherit;
+  }
+  .controls input:focus, .controls select:focus, .controls button:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-soft);
+  }
+  .clear-btn {
+    cursor: pointer;
+    font-weight: 700;
+    white-space: nowrap;
+  }
+  .clear-btn:hover {
+    background: var(--accent-soft);
+    border-color: var(--accent);
+  }
+
+  .summary-grid {
+    max-width: 1500px;
+    margin: 0 auto 1.2rem;
+    padding: 0 1.5rem;
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0.8rem;
+  }
+  .summary-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    box-shadow: var(--shadow);
+    padding: 1rem 1.1rem;
+  }
+  .summary-card .label {
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--text-muted);
+    font-weight: 700;
+  }
+  .summary-card .value {
+    margin-top: 0.3rem;
+    font-size: 1.7rem;
+    line-height: 1;
+    font-weight: 800;
+  }
+  .summary-card .hint {
+    margin-top: 0.35rem;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+  }
+
+  /* ---------- Table ---------- */
+  .table-wrap {
+    max-width: 1500px;
+    margin: 0 auto 2rem;
+    padding: 0 1.5rem;
+    overflow-x: auto;
+  }
+  table {
+    width: 100%;
+    border-collapse: separate;
+    border-spacing: 0 0.6rem;
+    min-width: 900px;
+  }
+  thead th {
+    text-align: left;
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--text-muted);
+    font-weight: 600;
+    padding: 0.5rem 0.8rem;
+    cursor: pointer;
+    user-select: none;
+    white-space: nowrap;
+    transition: color 0.2s;
+  }
+  thead th:hover { color: var(--accent); }
+  thead th .sort-arrow { opacity: 0.4; font-size: 0.7rem; margin-left: 0.2rem; }
+  thead th.active .sort-arrow { opacity: 1; color: var(--accent); }
+
+  tbody tr.product-row {
+    background: var(--surface);
+    box-shadow: var(--shadow);
+    transition: transform 0.15s, box-shadow 0.15s;
+    cursor: pointer;
+  }
+  tbody tr.product-row:hover {
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-lg);
+  }
+  tbody td {
+    padding: 1rem 0.8rem;
+    vertical-align: middle;
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+  }
+  tbody td:first-child {
+    border-left: 1px solid var(--border);
+    border-radius: 12px 0 0 12px;
+    font-weight: 600;
+  }
+  tbody td:last-child {
+    border-right: 1px solid var(--border);
+    border-radius: 0 12px 12px 0;
+  }
+
+  .product-name {
+    font-weight: 600;
+    font-size: 0.95rem;
+  }
+  .product-cat {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+  }
+
+  /* Score badge */
+  .score-cell { min-width: 110px; }
+  .score-badge {
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-weight: 800;
+    font-size: 1.15rem;
+    margin: 0 auto 0.3rem;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  }
+  .score-badge.excel { background: var(--green); }
+  .score-badge.bueno { background: var(--yellow); color: #1A1A2E; }
+  .score-badge.regular { background: var(--orange); }
+  .score-badge.malo { background: var(--red); }
+  .score-badge.nodata { background: var(--chip-grey); font-size: 1.5rem; }
+  .score-bar {
+    width: 80px;
+    height: 5px;
+    background: var(--border);
+    border-radius: 999px;
+    overflow: hidden;
+    margin: 0 auto;
+  }
+  .score-bar-fill {
+    height: 100%;
+    border-radius: 999px;
+    transition: width 0.5s ease;
+  }
+  .score-label {
+    font-size: 0.68rem;
+    text-align: center;
+    margin-top: 0.25rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+  }
+  .score-label.excel { color: var(--green); }
+  .score-label.bueno { color: var(--yellow); }
+  .score-label.regular { color: var(--orange); }
+  .score-label.malo { color: var(--red); }
+
+  /* Macros */
+  .macro { font-size: 0.9rem; }
+  .macro.dominant {
+    font-weight: 800;
+    color: var(--accent);
+  }
+
+  /* Additive chips */
+  .chip-list { display: flex; flex-wrap: wrap; gap: 0.3rem; max-width: 180px; }
+  .chip {
+    font-size: 0.72rem;
+    padding: 0.15rem 0.45rem;
+    border-radius: 6px;
+    font-weight: 600;
+    color: #fff;
+    white-space: nowrap;
+  }
+  .chip.danger { background: var(--red); }
+  .chip.warn { background: var(--orange); }
+  .chip.safe { background: var(--chip-grey); }
+  .no-add { color: var(--green); font-weight: 600; font-size: 0.85rem; }
+
+  .price { font-weight: 700; }
+
+  /* ---------- Detail panel ---------- */
+  tr.detail-row { background: var(--surface-hover); }
+  tr.detail-row td {
+    border-radius: 0 0 12px 12px;
+    padding: 0;
+    border: none;
+  }
+  .detail-panel {
+    padding: 1.5rem 2rem;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+    animation: slideDown 0.25s ease;
+  }
+  @keyframes slideDown {
+    from { opacity: 0; transform: translateY(-8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .detail-section h4 {
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--text-muted);
+    margin-bottom: 0.6rem;
+  }
+
+  /* NOVA */
+  .nova-group { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+  .nova-item {
+    padding: 0.5rem 0.8rem;
+    border-radius: 8px;
+    border: 2px solid var(--border);
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--text-muted);
+  }
+  .nova-item.active {
+    background: var(--accent-soft);
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+  .nova-desc { font-size: 0.85rem; color: var(--text-muted); margin-top: 0.5rem; }
+
+  /* Nutri-Score badge */
+  .nutri-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px; height: 44px;
+    border-radius: 10px;
+    font-weight: 800;
+    font-size: 1.4rem;
+    color: #fff;
+    margin-right: 0.4rem;
+  }
+  .nutri-A { background: #008A3C; }
+  .nutri-B { background: #5CB24B; }
+  .nutri-C { background: #F2C832; color: #1A1A2E; }
+  .nutri-D { background: #E7703B; }
+  .nutri-E { background: #D83234; }
+  .nutri-na { background: var(--border); color: var(--text-muted); font-size: 0.7rem; }
+
+  /* Score explanation */
+  .breakdown { display: flex; flex-direction: column; gap: 0.35rem; }
+  .breakdown-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.85rem;
+    padding: 0.35rem 0.6rem;
+    border-radius: 6px;
+    background: var(--surface);
+  }
+  .breakdown-row .reason { color: var(--text); }
+  .breakdown-row .delta { font-weight: 700; }
+  .breakdown-row .delta.pos { color: var(--green); }
+  .breakdown-row .delta.neg { color: var(--red); }
+  .breakdown-row .delta.neutral { color: var(--text-muted); }
+  .breakdown-total {
+    margin-top: 0.5rem;
+    padding: 0.5rem 0.6rem;
+    border-radius: 8px;
+    background: var(--accent-soft);
+    font-weight: 800;
+    display: flex;
+    justify-content: space-between;
+  }
+
+  /* Additive detail */
+  .additive-detail {
+    display: flex; flex-direction: column; gap: 0.5rem;
+  }
+  .additive-item {
+    display: flex; align-items: flex-start; gap: 0.6rem;
+    padding: 0.5rem 0.7rem;
+    border-radius: 8px;
+    border-left: 4px solid;
+    background: var(--surface);
+    flex-direction: column;
+  }
+  .additive-item.danger { border-color: var(--red); }
+  .additive-item.warn { border-color: var(--orange); }
+  .additive-item.safe { border-color: var(--chip-grey); }
+  .additive-item .code { font-weight: 700; font-size: 0.85rem; }
+  .additive-item .desc { font-size: 0.8rem; color: var(--text-muted); }
+  .additive-item .risk { font-size: 0.68rem; font-weight: 700; text-transform: uppercase; }
+  .additive-item.danger .risk { color: var(--red); }
+  .additive-item.warn .risk { color: var(--orange); }
+  .additive-item.safe .risk { color: var(--text-muted); }
+
+  .no-results {
+    text-align: center;
+    padding: 3rem;
+    color: var(--text-muted);
+    font-size: 1.1rem;
+    background: var(--surface);
+    border-radius: 12px;
+    box-shadow: var(--shadow);
+  }
+
+  footer {
+    text-align: center;
+    padding: 2rem;
+    color: var(--text-muted);
+    font-size: 0.82rem;
+  }
+
+  /* ---------- Sub-score UI (Phase 1) ---------- */
+  .subscore-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+  .subscore-block {
+    background: var(--surface);
+    border-radius: 10px;
+    padding: 0.8rem 1rem;
+    border: 1px solid var(--border);
+  }
+  .subscore-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+    font-size: 0.95rem;
+  }
+  .subscore-header .weight {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    background: var(--accent-soft);
+    padding: 0.15rem 0.45rem;
+    border-radius: 999px;
+    font-weight: 700;
+    margin-left: 0.3rem;
+  }
+  .subscore-header .value {
+    font-size: 1.2rem;
+    font-weight: 800;
+  }
+  .final-score-hero {
+    text-align: center;
+    margin-bottom: 1rem;
+    padding: 0.5rem 0;
+  }
+  .final-score-hero .formula {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin-top: 0.3rem;
+  }
+  .meta-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+    font-size: 0.78rem;
+    line-height: 1.25;
+  }
+  .meta-stack .meta-label {
+    color: var(--text-muted);
+    font-weight: 700;
+    text-transform: uppercase;
+    font-size: 0.68rem;
+    letter-spacing: 0.03em;
+  }
+  .meta-stack .meta-value {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    word-break: break-all;
+  }
+  .meta-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 0.8rem;
+    margin-bottom: 1rem;
+  }
+  .meta-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 0.7rem 0.9rem;
+  }
+  .meta-card .label {
+    color: var(--text-muted);
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    margin-bottom: 0.2rem;
+  }
+  .meta-card .value {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: 0.9rem;
+    word-break: break-all;
+  }
+
+  /* ---------- Responsive ---------- */
+  @media (max-width: 1100px) {
+    .controls { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .controls input:first-child { grid-column: 1 / -1; }
+    .summary-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
+  @media (max-width: 768px) {
+    .controls { grid-template-columns: 1fr 1fr; }
+    .controls input:first-child { grid-column: 1 / -1; }
+    .brand h1 { font-size: 1.5rem; }
+    .brand p { display: none; }
+    .detail-panel { grid-template-columns: 1fr; gap: 1.5rem; padding: 1rem; }
+    table { min-width: 100%; }
+    .product-name { font-size: 0.85rem; }
+  }
+  @media (max-width: 480px) {
+    .controls { grid-template-columns: 1fr; }
+    .header-actions { width: 100%; justify-content: space-between; }
+    .summary-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-top">
+    <div class="brand">
+      <h1><span class="leaf">🌿</span> MercaScore</h1>
+      <p>Descubre qué tan saludables son los productos de Mercadona</p>
+    </div>
+    <div class="header-actions">
+      <span class="counter" id="counter">Mostrando 0 de 0 productos</span>
+      <button class="theme-toggle" id="themeToggle" title="Cambiar tema">🌙</button>
+    </div>
+  </div>
+</header>
+
+<div class="controls">
+  <input type="text" id="searchInput" placeholder="🔍 Buscar producto..." autocomplete="off">
+  <select id="categoryFilter">
+    <option value="">Todas las categorías</option>
+  </select>
+  <select id="healthFilter">
+    <option value="">Todos los rangos</option>
+    <option value="excel">🟢 Excelente (75-100)</option>
+    <option value="bueno">🟡 Bueno (50-74)</option>
+    <option value="regular">🟠 Regular (25-49)</option>
+    <option value="malo">🔴 Malo (0-24)</option>
+  </select>
+  <select id="sortSelect">
+    <option value="puntuacion-desc">Puntuación ↓</option>
+    <option value="puntuacion-asc">Puntuación ↑</option>
+    <option value="precio-asc">Precio ↑</option>
+    <option value="precio-desc">Precio ↓</option>
+    <option value="nombre-asc">Nombre A-Z</option>
+  </select>
+  <button type="button" class="clear-btn" id="clearFilters">Limpiar filtros</button>
+</div>
+
+<section class="summary-grid" id="summaryGrid" aria-label="Resumen de resultados">
+  <article class="summary-card">
+    <div class="label">Resultados</div>
+    <div class="value" id="statVisible">0</div>
+    <div class="hint" id="statVisibleHint">de 0 productos</div>
+  </article>
+  <article class="summary-card">
+    <div class="label">Puntuación media</div>
+    <div class="value" id="statAverage">0</div>
+    <div class="hint">media del listado filtrado</div>
+  </article>
+  <article class="summary-card">
+    <div class="label">Mejor producto</div>
+    <div class="value" id="statTopScore">—</div>
+    <div class="hint" id="statTopName">Sin resultados</div>
+  </article>
+  <article class="summary-card">
+    <div class="label">Peor producto</div>
+    <div class="value" id="statBottomScore">—</div>
+    <div class="hint" id="statBottomName">Sin resultados</div>
+  </article>
+</section>
+
+<div class="table-wrap">
+  <table id="productTable">
+    <thead>
+      <tr>
+        <th data-sort="nombre">Producto <span class="sort-arrow">↕</span></th>
+        <th data-sort="categoria">Categoría <span class="sort-arrow">↕</span></th>
+        <th>Ref / barcode</th>
+        <th data-sort="puntuacion" class="active">Puntuación <span class="sort-arrow">↓</span></th>
+        <th data-sort="precio">Precio <span class="sort-arrow">↕</span></th>
+        <th data-sort="calorias">Calorías <span class="sort-arrow">↕</span></th>
+        <th data-sort="proteinas">Proteínas <span class="sort-arrow">↕</span></th>
+        <th data-sort="carbohidratos">Carbohidratos <span class="sort-arrow">↕</span></th>
+        <th data-sort="grasas">Grasas <span class="sort-arrow">↕</span></th>
+        <th>Aditivos</th>
+      </tr>
+    </thead>
+    <tbody id="productBody"></tbody>
+  </table>
+  <div id="noResults" class="no-results" style="display:none;">No se encontraron productos con los filtros actuales.</div>
+</div>
+
+<footer>
+  MercaScore · Datos ilustrativos basados en la metodología Yuka · Proyecto educativo sin conexión oficial con Mercadona
+</footer>
+
+<script>
+/* ============================================================
+   DATOS DE ADITIVOS
+   ============================================================ */
+const ADDITIVE_INFO = {
+  // ----- Cancerígenos / muy peligrosos (-25) -----
+  "E-220": { nivel: "danger", desc: "Dióxido de azufre. Conservante que puede causar reacciones alérgicas y asma." },
+  "E-239": { nivel: "danger", desc: "Hexametilentetramina. Conservante prohibido en varios países." },
+  "E-250": { nivel: "danger", desc: "Nitrito sódico. Conservante vinculado a la formación de nitrosaminas cancerígenas." },
+  "E-251": { nivel: "danger", desc: "Nitrato sódico. Conservante vinculado a compuestos cancerígenos." },
+  "E-252": { nivel: "danger", desc: "Nitrato potásico. Mismo grupo que E-251, vinculado a nitrosaminas." },
+  "E-621": { nivel: "danger", desc: "Glutamato monosódico. Potenciador del sabor con posibles efectos neurológicos y metabólicos." },
+  "E-635": { nivel: "danger", desc: "Ribonucleótidos sódicos. Potenciador del sabor, sinergia con glutamato (E-621)." },
+  "E-951": { nivel: "danger", desc: "Aspartamo. Edulcorante artificial, clasificado como posible cancerígeno (C2B OMS)." },
+  "E-211": { nivel: "danger", desc: "Benzoato sódico. Conservante que con vitamina C puede formar benceno, cancerígeno." },
+
+  // ----- A vigilar (-10) -----
+  "E-102": { nivel: "warn", desc: "Tartrazina. Colorante azo vinculado a hiperactividad infantil y alergias." },
+  "E-104": { nivel: "warn", desc: "Amarillo de quinoína. Colorante azo bajo vigilancia." },
+  "E-110": { nivel: "warn", desc: "Amarillo ocaso FCF. Colorante azo vinculado a hiperactividad." },
+  "E-120": { nivel: "warn", desc: "Carmín/ácido carmínico. Colorante natural de insectos, riesgo en alérgicos y vegetarianos." },
+  "E-124": { nivel: "warn", desc: "Rojo cochinilla A. Colorante azo, reacciones alérgicas." },
+  "E-129": { nivel: "warn", desc: "Rojo Allura AC. Colorante azo bajo vigilancia." },
+  "E-133": { nivel: "warn", desc: "Azul brillante FCF. Colorante bajo vigilancia." },
+  "E-150D": { nivel: "warn", desc: "Caramelo de sulfito amónico. Colorante bajo vigilancia por posibles subproductos." },
+  "E-200": { nivel: "warn", desc: "Ácido sórbico. Conservante seguro en dosis bajas, a vigilar en altas." },
+  "E-202": { nivel: "warn", desc: "Sorbato potásico. Conservante a vigilar en grandes cantidades." },
+  "E-210": { nivel: "warn", desc: "Ácido benzoico. Conservante, posible formación de benceno." },
+  "E-282": { nivel: "warn", desc: "Propionato cálcico. Conservante bajo vigilancia, posibles migrañas." },
+  "E-320": { nivel: "warn", desc: "BHA. Antioxidante con sospechas de carcinogenicidad." },
+  "E-321": { nivel: "warn", desc: "BHT. Antioxidante bajo vigilancia." },
+  "E-338": { nivel: "warn", desc: "Ácido fosfórico. Acidulante, exceso dañino para huesos y dientes." },
+  "E-339": { nivel: "warn", desc: "Fosfato sódico. Estabilizante, exceso de fósforo dañino." },
+  "E-340": { nivel: "warn", desc: "Fosfato potásico. Estabilizante, exceso de fósforo dañino." },
+  "E-385": { nivel: "warn", desc: "EDTA sódico cálcico. Quelante bajo vigilancia, afecta absorción de minerales." },
+  "E-407": { nivel: "warn", desc: "Carragenano. Espesante, posible inflamación intestinal en sensibles." },
+  "E-407A": { nivel: "warn", desc: "Procesado eucheuma. Espesante similar al carragenano, bajo vigilancia." },
+  "E-444": { nivel: "warn", desc: "Éster glicérido de colofonia. Emulsionante, posible alérgeno." },
+  "E-445": { nivel: "warn", desc: "Ésteres glicéridos de ácidos de madera. Emulsionante bajo vigilancia." },
+  "E-450": { nivel: "warn", desc: "Difosfato. Estabilizante, el exceso de fósforo es dañino." },
+  "E-451": { nivel: "warn", desc: "Trifosfato. Estabilizante, a vigilar." },
+  "E-452": { nivel: "warn", desc: "Polifosfato. Emulsionante, exceso de fósforo." },
+  "E-466": { nivel: "warn", desc: "Carboximetilcelulosa. Espesante bajo vigilancia, posible impacto intestinal." },
+  "E-551": { nivel: "warn", desc: "Dióxido de silicio. Antiaglomerante, bajo vigilancia en altas dosis." },
+  "E-950": { nivel: "warn", desc: "Acesulfamo K. Edulcorante artificial bajo sospecha de efectos metabólicos." },
+  "E-952": { nivel: "warn", desc: "Ciclamato. Edulcorante artificial prohibido en EE.UU., vigilar." },
+  "E-954": { nivel: "warn", desc: "Sacarina. Edulcorante artificial, bajo vigilancia." },
+
+  // ----- Inocuos (0) -----
+  "E-100": { nivel: "safe", desc: "Curcumina. Colorante natural de la cúrcuma, inocuo con propiedades antioxidantes." },
+  "E-140": { nivel: "safe", desc: "Clorofila. Colorante natural de plantas, inocuo." },
+  "E-1422": { nivel: "safe", desc: "Almidón acetilado adipato. Modificación de almidón, inocuo." },
+  "E-1450": { nivel: "safe", desc: "Almidón octenilsuccínico. Emulsionante derivado de almidón, inocuo." },
+  "E-14XX": { nivel: "safe", desc: "Almidón modificado (genérico). Derivado de almidón, inocuo." },
+  "E-150": { nivel: "safe", desc: "Caramelo (clase general). Colorante natural por caramelización, inocuo." },
+  "E-150A": { nivel: "safe", desc: "Caramelo clase I (plain). Colorante natural, inocuo." },
+  "E-153": { nivel: "safe", desc: "Carbón vegetal. Colorante natural, inocuo." },
+  "E-160A": { nivel: "safe", desc: "Betacaroteno. Colorante natural (pro-vitamina A), inocuo." },
+  "E-160AI": { nivel: "safe", desc: "Betacaroteno sintético. Colorante natural, inocuo." },
+  "E-160B": { nivel: "safe", desc: "Annato/bixina. Colorante natural de semillas, inocuo." },
+  "E-160BII": { nivel: "safe", desc: "Norbixina. Componente del annato, colorante natural inocuo." },
+  "E-160C": { nivel: "safe", desc: "Extracto de pimentón. Colorante natural (capsantina), inocuo." },
+  "E-161B": { nivel: "safe", desc: "Luteína. Colorante natural, inocuo con propiedades oculares." },
+  "E-262": { nivel: "safe", desc: "Acetato sódico. Regulador de acidez, inocuo." },
+  "E-270": { nivel: "safe", desc: "Ácido láctico. Conservante natural del yogur, inocuo." },
+  "E-290": { nivel: "safe", desc: "Dióxido de carbono. Gasificante natural, inocuo." },
+  "E-296": { nivel: "safe", desc: "Ácido málico. Acidulante natural de la manzana, inocuo." },
+  "E-300": { nivel: "safe", desc: "Ácido ascórbico (Vitamina C). Antioxidante natural, inocuo." },
+  "E-301": { nivel: "safe", desc: "Ascorbato sódico. Antioxidante inocuo." },
+  "E-304": { nivel: "safe", desc: "Palmitato de ascorbilo. Antioxidante liposoluble, inocuo." },
+  "E-306": { nivel: "safe", desc: "Extracto de tocoferol (Vitamina E). Antioxidante natural, inocuo." },
+  "E-316": { nivel: "safe", desc: "Eritorbato sódico. Antioxidante, generalmente inocuo." },
+  "E-322": { nivel: "safe", desc: "Lecitinas. Emulsionante natural, inocuo." },
+  "E-330": { nivel: "safe", desc: "Ácido cítrico. Regulador de acidez natural del limón, inocuo." },
+  "E-331": { nivel: "safe", desc: "Citrato sódico. Regulador de acidez, inocuo." },
+  "E-392": { nivel: "safe", desc: "Extracto de romero. Antioxidante natural, inocuo." },
+  "E-401": { nivel: "safe", desc: "Alginato sódico. Espesante de algas, inocuo." },
+  "E-410": { nivel: "safe", desc: "Goma de algarrobo. Espesante natural, inocuo." },
+  "E-412": { nivel: "safe", desc: "Goma guar. Espesante natural, inocuo." },
+  "E-414": { nivel: "safe", desc: "Goma arábiga. Espesante natural, inocuo." },
+  "E-415": { nivel: "safe", desc: "Goma xantana. Espesante generalmente inocuo." },
+  "E-417": { nivel: "safe", desc: "Goma tara. Espesante natural, inocuo." },
+  "E-418": { nivel: "safe", desc: "Goma gellana. Espesante natural, inocuo." },
+  "E-422": { nivel: "safe", desc: "Glicerol. Humectante natural, inocuo." },
+  "E-428": { nivel: "safe", desc: "Gelatina. Espesante de origen animal, inocuo." },
+  "E-440": { nivel: "safe", desc: "Pectina. Gelificante natural de fruta, inocuo." },
+  "E-460": { nivel: "safe", desc: "Celulosa. Espesante natural de plantas, inocuo." },
+  "E-471": { nivel: "safe", desc: "Mono y diglicéridos. Emulsionante, generalmente inocuo." },
+  "E-481": { nivel: "safe", desc: "Estearoil-2-lactilato sódico. Emulsionante, inocuo." },
+  "E-500": { nivel: "safe", desc: "Carbonato sódico. Regulador de acidez, inocuo." },
+  "E-502": { nivel: "safe", desc: "Carbonato ácido de amonio. Gasificante, inocuo." },
+  "E-503": { nivel: "safe", desc: "Carbonato de amonio. Gasificante, inocuo." },
+  "E-508": { nivel: "safe", desc: "Cloruro potásico. Sustituto de sal, inocuo (vigilar en problemas renales)." },
+  "E-920": { nivel: "safe", desc: "L-cisteína. Mejorador de pan, inocuo (origen animal/sintético)." },
+  "E-953": { nivel: "safe", desc: "Isomalta. Edulcorante polialcohol, inocuo (en dosis moderadas)." },
+  "E-955": { nivel: "safe", desc: "Sucralosa. Edulcorante artificial seguro, sin kcal." },
+  "E-959": { nivel: "safe", desc: "Taumatina. Edulcorante proteico natural, innocuo." },
+  "E-960A": { nivel: "safe", desc: "Glucósidos de esteviol (stevia). Edulcorante natural, inocuo." },
+  "E-965": { nivel: "safe", desc: "Maltitol. Edulcorante polialcohol, inocuo (puede causar gases)." },
+  "E-966": { nivel: "safe", desc: "Lactitol. Edulcorante polialcohol, inocuo (puede causar gases)." },
+  "E-968": { nivel: "safe", desc: "Eritritol. Edulcorante polialcohol, inocuo y bien tolerado." },
+
+  // ----- Variantes originales (compat código anterior) -----
+  "E-239-var": { nivel: "danger", desc: "Reservado" },
+  "E-334": { nivel: "safe", desc: "Ácido tartárico. Regulador de acidez natural." },
+  "E-433": { nivel: "safe", desc: "Lecitina de soja. Emulsionante, inocuo." },
+  "E-501": { nivel: "safe", desc: "Carbonato potásico. Regulador de acidez, inocuo." }
+};
+
+/* ============================================================
+   DATOS DE PRODUCTOS (137 productos reales de Mercadona + info nutricional de Open Food Facts)
+   ============================================================ */
+const productos = [{"nombre":"Pastel de atún Hacendado","categoria":"Pizzas y platos preparados","subcategoria":null,"precio":2.9,"ean":"8480000047984","calorias":291,"proteinas":9.7,"carbohidratos":16.4,"grasas":20.7,"grasas_sat":2.9,"azucares":1.7,"fibra":0,"sal":1.03,"nutriscore":"c","nova":null,"aditivos":{}},{"nombre":"Salsa de Soja Hacendado","categoria":"Aceite, especias y salsas","subcategoria":null,"precio":1.2,"ean":"4006824005715","calorias":74,"proteinas":7.5,"carbohidratos":8.3,"grasas":0.1,"grasas_sat":0.1,"azucares":4.3,"fibra":0,"sal":15.45,"nutriscore":"e","nova":4,"aditivos":["E-270","E-412"]},{"nombre":"Edulcorante en pastillas stevia Hacendado","categoria":"Azúcar, caramelos y chocolate","subcategoria":null,"precio":1.85,"ean":"8480000198129","calorias":12,"proteinas":3,"carbohidratos":0,"grasas":0,"grasas_sat":0,"azucares":0,"fibra":0,"sal":18.3,"nutriscore":null,"nova":4,"aditivos":["E-331","E-551","E-960A"]},{"nombre":"Pasta estrellas Hacendado","categoria":"Arroz, legumbres y pasta","subcategoria":null,"precio":0.8,"ean":"8480000063632","calorias":361,"proteinas":13,"carbohidratos":72,"grasas":1.5,"grasas_sat":0.3,"azucares":3.6,"fibra":3.5,"sal":0.01,"nutriscore":"a","nova":1,"aditivos":{}},{"nombre":"Tomate seco Hacendado en aceite de oliva","categoria":"Conservas, caldos y cremas","subcategoria":null,"precio":2.2,"ean":"8410972200421","calorias":140,"proteinas":2.9,"carbohidratos":7.8,"grasas":9.5,"grasas_sat":1.3,"azucares":5.2,"fibra":0,"sal":1.9,"nutriscore":"d","nova":null,"aditivos":{}},{"nombre":"Levadura fresca Levital","categoria":"Panadería y pastelería","subcategoria":null,"precio":0.5,"ean":"3516662870006","calorias":74,"proteinas":16,"carbohidratos":0,"grasas":1,"grasas_sat":0,"azucares":0,"fibra":0,"sal":0,"nutriscore":null,"nova":1,"aditivos":{}},{"nombre":"Postre de soja sabor arándanos Alpro","categoria":"Postres y yogures","subcategoria":null,"precio":2.3,"ean":"5411188137993","calorias":69,"proteinas":3.7,"carbohidratos":8.2,"grasas":2.2,"grasas_sat":0.4,"azucares":7.9,"fibra":1,"sal":0.15,"nutriscore":"b","nova":4,"aditivos":["E-304","E-306","E-330","E-331","E-440"]},{"nombre":"Leche semidesnatada sin lactosa Hacendado","categoria":"Huevos, leche y mantequilla","subcategoria":null,"precio":1.62,"ean":"8480000105462","calorias":44,"proteinas":3,"carbohidratos":4.6,"grasas":1.5,"grasas_sat":1,"azucares":4.6,"fibra":0,"sal":0.13,"nutriscore":"b","nova":1,"aditivos":{}},{"nombre":"Jamón cocido jugoso Hacendado lonchas","categoria":"Charcutería y quesos","subcategoria":null,"precio":1.95,"ean":"8402001049453","calorias":99,"proteinas":17.2,"carbohidratos":1.4,"grasas":2.7,"grasas_sat":0,"azucares":0,"fibra":0,"sal":2.06,"nutriscore":null,"nova":null,"aditivos":{}},{"nombre":"Bebida isotónica naranja Aquarius","categoria":"Agua y refrescos","subcategoria":null,"precio":1.91,"ean":"5449000133847","calorias":19,"proteinas":0,"carbohidratos":4.5,"grasas":0,"grasas_sat":0,"azucares":4.5,"fibra":0,"sal":0.06,"nutriscore":"d","nova":4,"aditivos":["E-296","E-300","E-330","E-331","E-340","E-414","E-445","E-950","E-955"]},{"nombre":"Mousse de queso Hacendado congelado","categoria":"Congelados","subcategoria":null,"precio":8,"ean":"8480000876010","calorias":322,"proteinas":3.4,"carbohidratos":34,"grasas":19,"grasas_sat":13,"azucares":26,"fibra":0.5,"sal":0.72,"nutriscore":"e","nova":null,"aditivos":{}},{"nombre":"Mayonesa Hellmann\u0027s","categoria":"Aceite, especias y salsas","subcategoria":null,"precio":2.95,"ean":"8410127050819","calorias":554,"proteinas":0.8,"carbohidratos":2.2,"grasas":61,"grasas_sat":9.7,"azucares":1.4,"fibra":0,"sal":1.08,"nutriscore":"c","nova":4,"aditivos":["E-14XX","E-160C","E-385"]},{"nombre":"Bacalao ahumado Hacendado en aceite de girasol","categoria":"Marisco y pescado","subcategoria":null,"precio":4.3,"ean":"8402001000607","calorias":253,"proteinas":17,"carbohidratos":0.9,"grasas":20,"grasas_sat":3.1,"azucares":0.5,"fibra":0,"sal":2.5,"nutriscore":"d","nova":3,"aditivos":{}},{"nombre":"Queso lonchas fundido burger mezcla Hacendado","categoria":"Charcutería y quesos","subcategoria":null,"precio":1.9,"ean":"8480000511980","calorias":240,"proteinas":12.4,"carbohidratos":12.2,"grasas":15.7,"grasas_sat":11,"azucares":5.3,"fibra":0,"sal":3.34,"nutriscore":"e","nova":4,"aditivos":["E-14XX","E-160A","E-160C","E-202","E-330","E-331","E-339"]},{"nombre":"Preparado en polvo natillas Hacendado","categoria":"Panadería y pastelería","subcategoria":null,"precio":1.4,"ean":"8480000323293","calorias":358,"proteinas":0,"carbohidratos":89,"grasas":0,"grasas_sat":0,"azucares":0.8,"fibra":1,"sal":1.3,"nutriscore":"c","nova":4,"aditivos":["E-100","E-160B","E-160BII","E-407"]},{"nombre":"Huevos de codorniz","categoria":"Huevos, leche y mantequilla","subcategoria":null,"precio":1.85,"ean":"8402001023422","calorias":154,"proteinas":13.1,"carbohidratos":0.4,"grasas":11.1,"grasas_sat":3.6,"azucares":0.5,"fibra":0,"sal":0.35,"nutriscore":"a","nova":null,"aditivos":{}},{"nombre":"Coulant de chocolate Hacendado","categoria":"Postres y yogures","subcategoria":null,"precio":2.2,"ean":"8480000829382","calorias":384,"proteinas":6.5,"carbohidratos":40,"grasas":21.2,"grasas_sat":9.4,"azucares":34.7,"fibra":0,"sal":0.13,"nutriscore":"e","nova":4,"aditivos":{}},{"nombre":"Café soluble Espresso Creme Hacendado","categoria":"Cacao, café e infusiones","subcategoria":null,"precio":2.9,"ean":"8480000111234","calorias":285,"proteinas":23,"carbohidratos":34,"grasas":0,"grasas_sat":0,"azucares":0,"fibra":28,"sal":0.41,"nutriscore":null,"nova":1,"aditivos":{}},{"nombre":"Rosca jamón serrano y queso emmental Hacendado","categoria":"Pizzas y platos preparados","subcategoria":null,"precio":3.7,"ean":"8402001010668","calorias":259,"proteinas":15.5,"carbohidratos":30,"grasas":8.2,"grasas_sat":4.2,"azucares":1.5,"fibra":0,"sal":2.06,"nutriscore":"d","nova":4,"aditivos":["E-160A","E-160AI","E-250","E-301","E-330"]},{"nombre":"Regañá artesana Hacendado","categoria":"Panadería y pastelería","subcategoria":null,"precio":1.5,"ean":"8480000868329","calorias":447,"proteinas":12,"carbohidratos":59,"grasas":18,"grasas_sat":2.6,"azucares":0.5,"fibra":0,"sal":1.6,"nutriscore":"d","nova":3,"aditivos":{}},{"nombre":"Pasta trottole vegetales Hacendado","categoria":"Arroz, legumbres y pasta","subcategoria":null,"precio":1.05,"ean":"8402001021398","calorias":362,"proteinas":13,"carbohidratos":72,"grasas":1.5,"grasas_sat":0.3,"azucares":3,"fibra":4,"sal":0,"nutriscore":null,"nova":null,"aditivos":{}},{"nombre":"Postre lácteo Lemon Cake Hacendado","categoria":"Postres y yogures","subcategoria":null,"precio":1.7,"ean":"8402001036255","calorias":248,"proteinas":4.6,"carbohidratos":19.3,"grasas":16.9,"grasas_sat":11.2,"azucares":16.5,"fibra":0,"sal":1.07,"nutriscore":"e","nova":4,"aditivos":"E-100"},{"nombre":"Pasta de sésamo Tahini Hacendado","categoria":"Aceite, especias y salsas","subcategoria":null,"precio":2.95,"ean":"8402001035265","calorias":710,"proteinas":25,"carbohidratos":3.2,"grasas":66,"grasas_sat":10,"azucares":1.4,"fibra":3.4,"sal":0.04,"nutriscore":"d","nova":1,"aditivos":{}},{"nombre":"Leche semidesnatada de cabra Hacendado","categoria":"Huevos, leche y mantequilla","subcategoria":null,"precio":11.82,"ean":"8480000108067","calorias":46,"proteinas":3.4,"carbohidratos":4.5,"grasas":1.6,"grasas_sat":1,"azucares":4.5,"fibra":0,"sal":0.1,"nutriscore":"b","nova":1,"aditivos":"E-339"},{"nombre":"Pistachos bañados de chocolate con leche Hacendado","categoria":"Azúcar, caramelos y chocolate","subcategoria":null,"precio":2.5,"ean":"8402001045233","calorias":571,"proteinas":12,"carbohidratos":42,"grasas":38.6,"grasas_sat":16.6,"azucares":40,"fibra":3.7,"sal":1.5,"nutriscore":null,"nova":null,"aditivos":{}},{"nombre":"Papilla plátano, mandarina y pera Hacendado +4 meses","categoria":"Bebé","subcategoria":null,"precio":2.85,"ean":"8480000221865","calorias":58,"proteinas":0.8,"carbohidratos":13,"grasas":0.5,"grasas_sat":0.1,"azucares":10,"fibra":1.8,"sal":0.02,"nutriscore":"a","nova":1,"aditivos":{}},{"nombre":"Refresco limón Schweppes original","categoria":"Agua y refrescos","subcategoria":null,"precio":0.97,"ean":"8414100301752","calorias":19,"proteinas":0,"carbohidratos":4.4,"grasas":0,"grasas_sat":0,"azucares":4.3,"fibra":0,"sal":0.02,"nutriscore":"d","nova":4,"aditivos":["E-14XX","E-202","E-290","E-330","E-444","E-445","E-955"]},{"nombre":"Jamón serrano Incarlopsa lonchas extrafinas","categoria":"Charcutería y quesos","subcategoria":null,"precio":2.45,"ean":"8421384012014","calorias":248,"proteinas":33.5,"carbohidratos":1,"grasas":12.2,"grasas_sat":4.6,"azucares":0.5,"fibra":0,"sal":3.6,"nutriscore":"e","nova":3,"aditivos":["E-250","E-252","E-301","E-331"]},{"nombre":"Refresco lima limón Sprite","categoria":"Agua y refrescos","subcategoria":null,"precio":0.55,"ean":"5449000205520","calorias":19,"proteinas":0,"carbohidratos":4.4,"grasas":0,"grasas_sat":0,"azucares":4.4,"fibra":0,"sal":0.04,"nutriscore":"d","nova":4,"aditivos":["E-330","E-331","E-950","E-951","E-959"]},{"nombre":"Mini helado sándwich sabor nata Hacendado","categoria":"Congelados","subcategoria":null,"precio":2.6,"ean":"8480000644503","calorias":325,"proteinas":4.9,"carbohidratos":37.5,"grasas":16.8,"grasas_sat":10.4,"azucares":25.6,"fibra":0,"sal":0.11,"nutriscore":"e","nova":4,"aditivos":["E-306","E-322","E-407","E-410","E-471","E-500","E-503"]},{"nombre":"Galletas caramelizadas Lotus Biscoff","categoria":"Cereales y galletas","subcategoria":null,"precio":1.6,"ean":"5410126116236","calorias":484,"proteinas":4.9,"carbohidratos":72.6,"grasas":19,"grasas_sat":8,"azucares":38.1,"fibra":1.3,"sal":0.92,"nutriscore":"e","nova":3,"aditivos":{}},{"nombre":"Queso curado cheddar Hacendado","categoria":"Charcutería y quesos","subcategoria":null,"precio":2.85,"ean":"8480000516305","calorias":410,"proteinas":25,"carbohidratos":0.5,"grasas":34.4,"grasas_sat":21.7,"azucares":0.5,"fibra":0,"sal":1.8,"nutriscore":"d","nova":3,"aditivos":{}},{"nombre":"Cacahuete tostado con sal Hacendado","categoria":"Aperitivos","subcategoria":null,"precio":1.65,"ean":"8480000340160","calorias":609,"proteinas":28,"carbohidratos":8.9,"grasas":49,"grasas_sat":10,"azucares":5.5,"fibra":9.2,"sal":1.1,"nutriscore":"c","nova":4,"aditivos":"E-412"},{"nombre":"Zumo de manzana selección Hacendado","categoria":"Zumos","subcategoria":null,"precio":1.7,"ean":"8480000399229","calorias":53,"proteinas":0.3,"carbohidratos":12.6,"grasas":0.2,"grasas_sat":0.1,"azucares":11.4,"fibra":0.8,"sal":0,"nutriscore":"e","nova":1,"aditivos":{}},{"nombre":"Preparado lácteo con cacao y cereales Hacendado +1 año","categoria":"Bebé","subcategoria":null,"precio":2.3,"ean":"8480000091901","calorias":90,"proteinas":2.5,"carbohidratos":12.5,"grasas":3.4,"grasas_sat":0.8,"azucares":6.8,"fibra":1,"sal":0.1,"nutriscore":null,"nova":4,"aditivos":["E-322","E-407","E-460","E-466"]},{"nombre":"Copos de avena integral con chocolate Hacendado","categoria":"Cereales y galletas","subcategoria":null,"precio":1.85,"ean":"8402001043857","calorias":405,"proteinas":10.8,"carbohidratos":59.5,"grasas":11.4,"grasas_sat":4.2,"azucares":10.4,"fibra":10.8,"sal":0.01,"nutriscore":"c","nova":4,"aditivos":"E-322"},{"nombre":"Café en cápsula descafeinado Hacendado","categoria":"Cacao, café e infusiones","subcategoria":null,"precio":3.35,"ean":"8480000232939","calorias":350,"proteinas":15,"carbohidratos":15,"grasas":15,"grasas_sat":6.7,"azucares":0.6,"fibra":47,"sal":0.02,"nutriscore":"c","nova":1,"aditivos":{}},{"nombre":"Tiras de pechuga pollo al horno Hacendado","categoria":"Charcutería y quesos","subcategoria":null,"precio":2.25,"ean":"8480000566522","calorias":107,"proteinas":23.4,"carbohidratos":0.6,"grasas":1.2,"grasas_sat":0.4,"azucares":0.6,"fibra":0,"sal":1.77,"nutriscore":"b","nova":4,"aditivos":{}},{"nombre":"Café en cápsula extra fuerte Hacendado","categoria":"Cacao, café e infusiones","subcategoria":null,"precio":3.8,"ean":"8480000103505","calorias":1,"proteinas":0,"carbohidratos":0.0,"grasas":0.2,"grasas_sat":0.1,"azucares":0,"fibra":0,"sal":0,"nutriscore":null,"nova":null,"aditivos":{}},{"nombre":"Pizza masa fina jamón Hacendado ultracongelada","categoria":"Congelados","subcategoria":null,"precio":2.5,"ean":"8480000633392","calorias":232,"proteinas":9.7,"carbohidratos":27.2,"grasas":9.4,"grasas_sat":6.1,"azucares":5.4,"fibra":0,"sal":1.5,"nutriscore":"d","nova":null,"aditivos":{}},{"nombre":"Salchichas cocidas estilo Viena con queso Hacendado de pollo y cerdo sabor ahumado","categoria":"Charcutería y quesos","subcategoria":null,"precio":1.7,"ean":"8480000530301","calorias":256,"proteinas":14.8,"carbohidratos":1.3,"grasas":21.2,"grasas_sat":8.8,"azucares":0.5,"fibra":0,"sal":2.2,"nutriscore":"e","nova":4,"aditivos":["E-250","E-316","E-331","E-450"]},{"nombre":"Pan de leche Hacendado","categoria":"Panadería y pastelería","subcategoria":null,"precio":1.85,"ean":"8402001018831","calorias":332,"proteinas":8.5,"carbohidratos":50,"grasas":10,"grasas_sat":4.5,"azucares":17,"fibra":2.2,"sal":0,"nutriscore":null,"nova":4,"aditivos":["E-160A","E-200","E-202","E-282","E-322","E-330","E-417","E-471","E-481"]},{"nombre":"Bífidus natural probióticos Activia 0% MG  0% azúcares añadidos","categoria":"Postres y yogures","subcategoria":null,"precio":3.3,"ean":"8410500008871","calorias":42,"proteinas":4,"carbohidratos":5,"grasas":0.4,"grasas_sat":0.2,"azucares":5,"fibra":0,"sal":0.15,"nutriscore":"a","nova":3,"aditivos":{}},{"nombre":"Jamón cocido extra 50% raza ibérica Noel lonchas","categoria":"Charcutería y quesos","subcategoria":null,"precio":2.85,"ean":"8410783356430","calorias":147,"proteinas":20,"carbohidratos":0.9,"grasas":7,"grasas_sat":0,"azucares":0,"fibra":0,"sal":1.67,"nutriscore":null,"nova":4,"aditivos":["E-250","E-316"]},{"nombre":"Chocolate negro 55% cacao Hacendado","categoria":"Azúcar, caramelos y chocolate","subcategoria":null,"precio":1.75,"ean":"8480000706522","calorias":534,"proteinas":5.5,"carbohidratos":47,"grasas":35,"grasas_sat":22,"azucares":44,"fibra":7.6,"sal":0.01,"nutriscore":"e","nova":4,"aditivos":"E-322"},{"nombre":"Infusión Yerba Mate Amanda","categoria":"Cacao, café e infusiones","subcategoria":null,"precio":2.85,"ean":"7792710000090","calorias":176,"proteinas":0.6,"carbohidratos":9.4,"grasas":0,"grasas_sat":0,"azucares":0,"fibra":0,"sal":0.06,"nutriscore":null,"nova":null,"aditivos":{}},{"nombre":"Almendra tostada y salada Hacendado con piel","categoria":"Aperitivos","subcategoria":null,"precio":2.4,"ean":"8402001032707","calorias":626,"proteinas":22.4,"carbohidratos":4.3,"grasas":55,"grasas_sat":5.3,"azucares":4.3,"fibra":12,"sal":1.08,"nutriscore":null,"nova":null,"aditivos":{}},{"nombre":"Tiramisú Hacendado","categoria":"Postres y yogures","subcategoria":null,"precio":1.35,"ean":"8003938005842","calorias":235,"proteinas":4.4,"carbohidratos":30.3,"grasas":9.1,"grasas_sat":7.3,"azucares":18.6,"fibra":1.5,"sal":0.19,"nutriscore":"d","nova":null,"aditivos":{}},{"nombre":"Refresco de limón Hacendado zero azúcar fresh gas","categoria":"Agua y refrescos","subcategoria":null,"precio":0.95,"ean":"8480000290786","calorias":2,"proteinas":0,"carbohidratos":0,"grasas":0,"grasas_sat":0,"azucares":0,"fibra":0,"sal":0.03,"nutriscore":"c","nova":4,"aditivos":["E-1450","E-202","E-300","E-330","E-331","E-445","E-950","E-951","E-952"]},{"nombre":"Yogur cremoso con melocotón y maracuya Hacendado","categoria":"Postres y yogures","subcategoria":null,"precio":1.25,"ean":"8480000203793","calorias":96,"proteinas":3.6,"carbohidratos":13.1,"grasas":3.2,"grasas_sat":2.2,"azucares":12.7,"fibra":0,"sal":0.1,"nutriscore":"c","nova":4,"aditivos":["E-161B","E-202","E-407"]},{"nombre":"Postre de coco natural Alpro sin azúcares añadidos","categoria":"Postres y yogures","subcategoria":null,"precio":2.6,"ean":"5411188131380","calorias":77,"proteinas":0.6,"carbohidratos":4.5,"grasas":6,"grasas_sat":5.6,"azucares":0.6,"fibra":0,"sal":0.03,"nutriscore":"c","nova":4,"aditivos":"E-14XX"},{"nombre":"Queso en porciones Hacendado","categoria":"Charcutería y quesos","subcategoria":null,"precio":1.95,"ean":"8480000524058","calorias":192,"proteinas":11.8,"carbohidratos":3.9,"grasas":14.3,"grasas_sat":9.9,"azucares":3.9,"fibra":0,"sal":1.78,"nutriscore":"d","nova":4,"aditivos":["E-202","E-330","E-331","E-450","E-452"]},{"nombre":"Cerveza Suave Steinburg","categoria":"Bodega","subcategoria":null,"precio":3.36,"ean":"8480000664853","calorias":32,"proteinas":0.5,"carbohidratos":1,"grasas":0.5,"grasas_sat":0.1,"azucares":0.7,"fibra":0.5,"sal":0.01,"nutriscore":null,"nova":3,"aditivos":{}},{"nombre":"Bebida láctea sabor fresa y plátano +Proteínas Hacendado 0% MG 0% azúcares añadidos 17,4 g proteínas","categoria":"Postres y yogures","subcategoria":null,"precio":2.5,"ean":"8402001030383","calorias":48,"proteinas":7.0,"carbohidratos":4.2,"grasas":0.4,"grasas_sat":0.2,"azucares":3.9,"fibra":0,"sal":0.05,"nutriscore":null,"nova":4,"aditivos":["E-202","E-418","E-955"]},{"nombre":"Helado Dochi cheesecake Hacendado con salsa de frambuesa","categoria":"Congelados","subcategoria":null,"precio":3,"ean":"8402001011696","calorias":303,"proteinas":3.4,"carbohidratos":42.9,"grasas":13.1,"grasas_sat":9.1,"azucares":28.3,"fibra":0.6,"sal":0.03,"nutriscore":"e","nova":4,"aditivos":["E-1422","E-200","E-330","E-339","E-407","E-407A","E-410","E-412","E-417","E-440","E-450","E-452","E-471","E-500","E-508"]},{"nombre":"Bífidus con kiwi probióticos Hacendado 0% MG 0% azúcares añadidos","categoria":"Postres y yogures","subcategoria":null,"precio":1.3,"ean":"8402001040337","calorias":48,"proteinas":3.9,"carbohidratos":7.7,"grasas":0.1,"grasas_sat":0,"azucares":5.5,"fibra":0.3,"sal":0.18,"nutriscore":"a","nova":4,"aditivos":"E-955"},{"nombre":"Preparado de carne picada vacuno","categoria":"Carne","subcategoria":null,"precio":10.8,"ean":"8421610034544","calorias":182,"proteinas":17,"carbohidratos":0.9,"grasas":12,"grasas_sat":5,"azucares":0.8,"fibra":0,"sal":0.3,"nutriscore":"c","nova":4,"aditivos":["E-301","E-330"]},{"nombre":"Remolacha en tiras Hacendado","categoria":"Conservas, caldos y cremas","subcategoria":null,"precio":1.35,"ean":"8402001034732","calorias":35,"proteinas":1.8,"carbohidratos":6.4,"grasas":0.5,"grasas_sat":0.1,"azucares":5.3,"fibra":0.9,"sal":1.38,"nutriscore":"c","nova":null,"aditivos":{}},{"nombre":"Aceitunas negras de Aragón Campo Nature","categoria":"Aperitivos","subcategoria":null,"precio":2.25,"ean":"8436530670109","calorias":365,"proteinas":1.6,"carbohidratos":8.9,"grasas":37.2,"grasas_sat":6.5,"azucares":0.5,"fibra":4,"sal":0,"nutriscore":null,"nova":3,"aditivos":{}},{"nombre":"Huevos super grandes XL","categoria":"Huevos, leche y mantequilla","subcategoria":null,"precio":4.3,"ean":"8402001022340","calorias":17,"proteinas":1.5,"carbohidratos":1.1,"grasas":0,"grasas_sat":0,"azucares":0,"fibra":1.5,"sal":1.9,"nutriscore":"c","nova":3,"aditivos":"E-330"},{"nombre":"Mini helado bombón surtido Hacendado sin azúcares añadidos","categoria":"Congelados","subcategoria":null,"precio":3,"ean":"8480000641021","calorias":295,"proteinas":6,"carbohidratos":31.5,"grasas":19.7,"grasas_sat":13.2,"azucares":7,"fibra":0.5,"sal":0.18,"nutriscore":"d","nova":4,"aditivos":["E-160B","E-322","E-407","E-410","E-415","E-471","E-950","E-951","E-965","E-966"]},{"nombre":"Aguacate en dados Hacendado congelado","categoria":"Congelados","subcategoria":null,"precio":3.5,"ean":"8402001036965","calorias":159,"proteinas":1.6,"carbohidratos":2.9,"grasas":14,"grasas_sat":3,"azucares":2.1,"fibra":6.4,"sal":0,"nutriscore":null,"nova":null,"aditivos":{}},{"nombre":"Porciones de chocolate negro 72% cacao extrafino Hacendado","categoria":"Azúcar, caramelos y chocolate","subcategoria":null,"precio":3.25,"ean":"8402001016394","calorias":562,"proteinas":10,"carbohidratos":32,"grasas":42,"grasas_sat":26,"azucares":27,"fibra":11,"sal":0.03,"nutriscore":"e","nova":null,"aditivos":{}},{"nombre":"Puntilla de la Índia Hacendado congelada","categoria":"Congelados","subcategoria":null,"precio":4.7,"ean":"8436048075083","calorias":61,"proteinas":13,"carbohidratos":0,"grasas":1,"grasas_sat":0.4,"azucares":0,"fibra":0,"sal":0.55,"nutriscore":"a","nova":null,"aditivos":{}},{"nombre":"Bebida isotónica limón Aquarius","categoria":"Agua y refrescos","subcategoria":null,"precio":1.91,"ean":"5449000164957","calorias":18,"proteinas":0,"carbohidratos":4.3,"grasas":0,"grasas_sat":0,"azucares":4.3,"fibra":0,"sal":0.05,"nutriscore":"d","nova":4,"aditivos":["E-296","E-300","E-330","E-331","E-340","E-414","E-445","E-950","E-955"]},{"nombre":"Queso fresco Burgos desnatado 0% MG Hacendado","categoria":"Charcutería y quesos","subcategoria":null,"precio":1.15,"ean":"8480000524096","calorias":67,"proteinas":12,"carbohidratos":3.9,"grasas":0.4,"grasas_sat":0.1,"azucares":3.9,"fibra":0,"sal":0.91,"nutriscore":"b","nova":null,"aditivos":{}},{"nombre":"Crema de avellanas y cacao Hacendado","categoria":"Azúcar, caramelos y chocolate","subcategoria":null,"precio":2.35,"ean":"8402001025693","calorias":547,"proteinas":6.5,"carbohidratos":54,"grasas":33,"grasas_sat":11,"azucares":52,"fibra":3.1,"sal":0.13,"nutriscore":"e","nova":4,"aditivos":{}},{"nombre":"Bebida láctea natural Actimel","categoria":"Postres y yogures","subcategoria":null,"precio":5.99,"ean":"8410500010485","calorias":66,"proteinas":3.1,"carbohidratos":9.9,"grasas":1.5,"grasas_sat":1,"azucares":9.9,"fibra":0,"sal":0.1,"nutriscore":"d","nova":null,"aditivos":{}},{"nombre":"Caramelos sabor lima Hacendado 0% azúcares","categoria":"Azúcar, caramelos y chocolate","subcategoria":null,"precio":1.6,"ean":"8402001022821","calorias":233,"proteinas":0,"carbohidratos":97,"grasas":0,"grasas_sat":0,"azucares":0,"fibra":0,"sal":0.13,"nutriscore":"b","nova":4,"aditivos":["E-100","E-153","E-330","E-951","E-953"]},{"nombre":"Crema de lentejas Hacendado","categoria":"Conservas, caldos y cremas","subcategoria":null,"precio":1.7,"ean":"8402001030840","calorias":70,"proteinas":4.6,"carbohidratos":6,"grasas":2.2,"grasas_sat":0.4,"azucares":1.3,"fibra":0,"sal":0,"nutriscore":"b","nova":3,"aditivos":{}},{"nombre":"Caldo de pescado Hacendado","categoria":"Conservas, caldos y cremas","subcategoria":null,"precio":0.95,"ean":"8402001013911","calorias":3,"proteinas":0.5,"carbohidratos":0.7,"grasas":0.5,"grasas_sat":0.1,"azucares":0.5,"fibra":0.5,"sal":0.9,"nutriscore":"c","nova":null,"aditivos":{}},{"nombre":"Bebida isotónica Iso On blue Hacendado","categoria":"Agua y refrescos","subcategoria":null,"precio":0.7,"ean":"8402001049002","calorias":21,"proteinas":0,"carbohidratos":4.9,"grasas":0,"grasas_sat":0,"azucares":4.9,"fibra":0,"sal":0.1,"nutriscore":null,"nova":null,"aditivos":{}},{"nombre":"Piña en su jugo Hacendado rodajas","categoria":"Conservas, caldos y cremas","subcategoria":null,"precio":2.2,"ean":"8410037002274","calorias":55,"proteinas":0.4,"carbohidratos":13.2,"grasas":0.1,"grasas_sat":0,"azucares":11,"fibra":0,"sal":0.01,"nutriscore":"a","nova":1,"aditivos":"E-330"},{"nombre":"Bebida energética Energy Ultra zero Strawberry Monster","categoria":"Agua y refrescos","subcategoria":null,"precio":1.45,"ean":"5056784900826","calorias":2,"proteinas":0,"carbohidratos":0.8,"grasas":0,"grasas_sat":0,"azucares":0,"fibra":0,"sal":0.16,"nutriscore":"c","nova":4,"aditivos":["E-110","E-129","E-200","E-445","E-950","E-955","E-968"]},{"nombre":"Cereales copos de trigo Chocodays Hacendado con chocolate","categoria":"Cereales y galletas","subcategoria":null,"precio":2,"ean":"8402001011764","calorias":372,"proteinas":8,"carbohidratos":70,"grasas":4.8,"grasas_sat":1.6,"azucares":25,"fibra":7.6,"sal":0.27,"nutriscore":"c","nova":4,"aditivos":"E-322"},{"nombre":"Fresas enteras Hacendado ultracongeladas","categoria":"Congelados","subcategoria":null,"precio":1.9,"ean":"8480000610928","calorias":30,"proteinas":0.7,"carbohidratos":5.2,"grasas":0,"grasas_sat":0,"azucares":4.7,"fibra":0,"sal":0,"nutriscore":null,"nova":1,"aditivos":{}},{"nombre":"Pan tostado con copos de avena Vitalité Kaura Wasa","categoria":"Panadería y pastelería","subcategoria":null,"precio":2.45,"ean":"7300400122092","calorias":381,"proteinas":2.1,"carbohidratos":11,"grasas":1,"grasas_sat":0.2,"azucares":0,"fibra":1.8,"sal":0.21,"nutriscore":"b","nova":4,"aditivos":["E-471","E-500"]},{"nombre":"Masa fresca hojaldre Hacendado","categoria":"Panadería y pastelería","subcategoria":null,"precio":2.4,"ean":"8480000634511","calorias":395,"proteinas":7.1,"carbohidratos":42,"grasas":21.5,"grasas_sat":10.5,"azucares":1.4,"fibra":0,"sal":0,"nutriscore":"d","nova":3,"aditivos":{}},{"nombre":"Aceitunas verdes rellenas de anchoa Hacendado","categoria":"Aperitivos","subcategoria":null,"precio":3.35,"ean":"8402001030895","calorias":135,"proteinas":1.2,"carbohidratos":0,"grasas":14,"grasas_sat":2.6,"azucares":0,"fibra":0,"sal":3.6,"nutriscore":"e","nova":null,"aditivos":{}},{"nombre":"Hélices Hacendado","categoria":"Arroz, legumbres y pasta","subcategoria":null,"precio":0.8,"ean":"8480000062383","calorias":361,"proteinas":13,"carbohidratos":72,"grasas":1.5,"grasas_sat":0.3,"azucares":3.6,"fibra":3.5,"sal":0.01,"nutriscore":"a","nova":1,"aditivos":{}},{"nombre":"Helado capuccino Hacendado con sirope de café","categoria":"Congelados","subcategoria":null,"precio":3.25,"ean":"8402001010255","calorias":224,"proteinas":2.8,"carbohidratos":31,"grasas":9.6,"grasas_sat":0,"azucares":0,"fibra":0,"sal":0.17,"nutriscore":null,"nova":null,"aditivos":{}},{"nombre":"Spaghetti carbonara Hacendado","categoria":"Pizzas y platos preparados","subcategoria":null,"precio":2.2,"ean":"8480000042651","calorias":142,"proteinas":4.8,"carbohidratos":15,"grasas":6.7,"grasas_sat":3.9,"azucares":1.1,"fibra":0.5,"sal":0.89,"nutriscore":"c","nova":4,"aditivos":["E-250","E-301","E-415","E-428"]},{"nombre":"Arroz cocido basmati Sabroz","categoria":"Arroz, legumbres y pasta","subcategoria":null,"precio":1.1,"ean":"8410184040730","calorias":164,"proteinas":3.9,"carbohidratos":31,"grasas":2.2,"grasas_sat":0.3,"azucares":0,"fibra":1.6,"sal":0.88,"nutriscore":"c","nova":4,"aditivos":"E-322"},{"nombre":"Cereales copos de trigo espelta integral Hacendado 0% azúcares añadidos","categoria":"Cereales y galletas","subcategoria":null,"precio":1.7,"ean":"8480000095718","calorias":364,"proteinas":14.6,"carbohidratos":66,"grasas":2.7,"grasas_sat":0.2,"azucares":1.9,"fibra":8.8,"sal":0.78,"nutriscore":"a","nova":3,"aditivos":{}},{"nombre":"Chucrut al estilo bávaro Hengstenberg","categoria":"Conservas, caldos y cremas","subcategoria":null,"precio":2.2,"ean":"4008100151611","calorias":22,"proteinas":1.5,"carbohidratos":1.9,"grasas":0.5,"grasas_sat":0.1,"azucares":1.7,"fibra":0,"sal":1.1,"nutriscore":"c","nova":3,"aditivos":{}},{"nombre":"Pizza Pepperoni barbacoa Hacendado ultracongelada","categoria":"Congelados","subcategoria":null,"precio":3.5,"ean":"8480000226488","calorias":251,"proteinas":10,"carbohidratos":32.3,"grasas":8.8,"grasas_sat":3.9,"azucares":0,"fibra":0,"sal":0,"nutriscore":null,"nova":null,"aditivos":{}},{"nombre":"Mini helado bombón vegetal pistacho Hacendado a base de anacardos","categoria":"Congelados","subcategoria":null,"precio":3.3,"ean":"8006040610072","calorias":364,"proteinas":3.2,"carbohidratos":32,"grasas":24,"grasas_sat":16,"azucares":29,"fibra":3.5,"sal":0.12,"nutriscore":"e","nova":4,"aditivos":["E-140","E-150","E-322","E-401","E-412","E-471"]},{"nombre":"Mortadela con aceitunas Hacendado lonchas","categoria":"Charcutería y quesos","subcategoria":null,"precio":1.25,"ean":"8480000593351","calorias":244,"proteinas":10.5,"carbohidratos":5.6,"grasas":20,"grasas_sat":6.7,"azucares":0.7,"fibra":0,"sal":2.1,"nutriscore":"e","nova":4,"aditivos":["E-120","E-250","E-301","E-407","E-451"]},{"nombre":"3 Bocadillos","categoria":"Panadería y pastelería","subcategoria":null,"precio":1.04,"ean":"8480000096647","calorias":259,"proteinas":8.1,"carbohidratos":52,"grasas":1.1,"grasas_sat":0.2,"azucares":2.8,"fibra":3.5,"sal":1.18,"nutriscore":"c","nova":3,"aditivos":{}},{"nombre":"Bífidus natural edulcorado probióticos Activia 0% MG 0% azúcares añadidos","categoria":"Postres y yogures","subcategoria":null,"precio":3.3,"ean":"8410500014421","calorias":39,"proteinas":4,"carbohidratos":4.8,"grasas":0.4,"grasas_sat":0.2,"azucares":4.8,"fibra":0,"sal":0.2,"nutriscore":"a","nova":4,"aditivos":["E-428","E-950","E-955"]},{"nombre":"99% cacao negro Hacendado","categoria":"Azúcar, caramelos y chocolate","subcategoria":null,"precio":2.5,"ean":"8480000125866","calorias":610,"proteinas":15,"carbohidratos":8,"grasas":54,"grasas_sat":34,"azucares":1,"fibra":16,"sal":0.19,"nutriscore":"d","nova":3,"aditivos":{}},{"nombre":"Queso lonchas edam de vaca Holland Corona","categoria":"Charcutería y quesos","subcategoria":null,"precio":2.05,"ean":"8710912029939","calorias":321,"proteinas":25.4,"carbohidratos":0,"grasas":24,"grasas_sat":17,"azucares":0,"fibra":0,"sal":1.87,"nutriscore":"d","nova":null,"aditivos":{}},{"nombre":"Pollo marinado rebozado Crispy American Style Hacendado ultracongelado","categoria":"Carne","subcategoria":null,"precio":4.9,"ean":"8480000603067","calorias":210,"proteinas":15,"carbohidratos":23,"grasas":6.2,"grasas_sat":0.8,"azucares":0.6,"fibra":0,"sal":3,"nutriscore":"d","nova":4,"aditivos":["E-14XX","E-450","E-500"]},{"nombre":"Risotto de setas para microondas Hacendado ultracongelado","categoria":"Congelados","subcategoria":null,"precio":2,"ean":"8402001022937","calorias":145,"proteinas":3,"carbohidratos":17,"grasas":7.2,"grasas_sat":2.7,"azucares":0,"fibra":0.5,"sal":0.75,"nutriscore":"c","nova":4,"aditivos":{}},{"nombre":"Gaseosa pequeña Hacendado","categoria":"Agua y refrescos","subcategoria":null,"precio":2.04,"ean":"8480000279729","calorias":0,"proteinas":0,"carbohidratos":0,"grasas":0,"grasas_sat":0,"azucares":0,"fibra":0,"sal":0.02,"nutriscore":"c","nova":4,"aditivos":["E-330","E-952","E-954"]},{"nombre":"Tortitas de arroz con chocolate con leche Hacendado","categoria":"Cereales y galletas","subcategoria":null,"precio":1.9,"ean":"8480000141422","calorias":468,"proteinas":7.1,"carbohidratos":70,"grasas":17,"grasas_sat":11,"azucares":28,"fibra":2.4,"sal":0.46,"nutriscore":"e","nova":4,"aditivos":"E-322"},{"nombre":"Refresco de limón Hacendado zero azúcar fresh gas","categoria":"Agua y refrescos","subcategoria":null,"precio":0.37,"ean":"8480000290465","calorias":2,"proteinas":0,"carbohidratos":0,"grasas":0,"grasas_sat":0,"azucares":0,"fibra":0,"sal":0.03,"nutriscore":"c","nova":4,"aditivos":["E-1450","E-202","E-300","E-330","E-331","E-445","E-950","E-951","E-952"]},{"nombre":"Piadina Hacendado","categoria":"Panadería y pastelería","subcategoria":null,"precio":2.2,"ean":"8402001045820","calorias":323,"proteinas":8.1,"carbohidratos":46,"grasas":11,"grasas_sat":0,"azucares":3.4,"fibra":4,"sal":0,"nutriscore":null,"nova":null,"aditivos":{}},{"nombre":"Arroz redondo La Fallera","categoria":"Arroz, legumbres y pasta","subcategoria":null,"precio":1.69,"ean":"8410084041110","calorias":347,"proteinas":6.7,"carbohidratos":77,"grasas":1.1,"grasas_sat":0.3,"azucares":0,"fibra":0.9,"sal":0,"nutriscore":"b","nova":1,"aditivos":{}},{"nombre":"Natillas con chocolate +Proteínas Hacendado 1,3 g MG 10 g proteínas","categoria":"Postres y yogures","subcategoria":null,"precio":1.75,"ean":"8402001021053","calorias":81,"proteinas":8.4,"carbohidratos":8.7,"grasas":1.1,"grasas_sat":0.6,"azucares":6.6,"fibra":0.7,"sal":0.1,"nutriscore":"a","nova":4,"aditivos":["E-14XX","E-331","E-407","E-955"]},{"nombre":"Mantequilla en porciones Hacendado sin sal añadida","categoria":"Huevos, leche y mantequilla","subcategoria":null,"precio":2.05,"ean":"8480000208521","calorias":743,"proteinas":0.5,"carbohidratos":0.8,"grasas":82,"grasas_sat":56,"azucares":0.8,"fibra":0,"sal":0.05,"nutriscore":"e","nova":2,"aditivos":{}},{"nombre":"Salchichas cocidas estilo Frankfurt con queso Hacendado de pollo y cerdo sabor ahumado","categoria":"Charcutería y quesos","subcategoria":null,"precio":1.95,"ean":"8480000531001","calorias":212,"proteinas":12.1,"carbohidratos":5.5,"grasas":15.7,"grasas_sat":6.1,"azucares":0.5,"fibra":0,"sal":0.01,"nutriscore":"c","nova":4,"aditivos":["E-250","E-316","E-331","E-450"]},{"nombre":"Sazonador barbacoa Hacendado para pollo y costillas","categoria":"Aceite, especias y salsas","subcategoria":null,"precio":1.3,"ean":"8402001002069","calorias":299,"proteinas":3,"carbohidratos":65.7,"grasas":1.3,"grasas_sat":0.6,"azucares":56.3,"fibra":6.2,"sal":15.8,"nutriscore":null,"nova":null,"aditivos":{}},{"nombre":"Golosinas Mix azúcar Hacendado","categoria":"Azúcar, caramelos y chocolate","subcategoria":null,"precio":1.6,"ean":"8402001025082","calorias":333,"proteinas":4.5,"carbohidratos":79,"grasas":0,"grasas_sat":0,"azucares":66,"fibra":0.2,"sal":0.20,"nutriscore":"e","nova":4,"aditivos":["E-100","E-120","E-133","E-160C","E-330","E-331","E-428","E-440"]},{"nombre":"Fideos orientales Yakisoba sabor soja Hacendado","categoria":"Arroz, legumbres y pasta","subcategoria":null,"precio":0.9,"ean":"8480000087300","calorias":204,"proteinas":4.4,"carbohidratos":26.1,"grasas":8.5,"grasas_sat":4.2,"azucares":3,"fibra":0,"sal":1.3,"nutriscore":null,"nova":4,"aditivos":["E-330","E-412","E-451","E-500","E-502","E-621"]},{"nombre":"Nata ligera para cocinar sin lactosa Hacendado","categoria":"Huevos, leche y mantequilla","subcategoria":null,"precio":2.4,"ean":"8480000103208","calorias":163,"proteinas":2,"carbohidratos":5,"grasas":15,"grasas_sat":10,"azucares":3,"fibra":0,"sal":0.1,"nutriscore":"d","nova":4,"aditivos":["E-415","E-451","E-460","E-466","E-471"]},{"nombre":"Relleno fajitas pollo, pimientos y cebolla Hacendado ultracongelado","categoria":"Congelados","subcategoria":null,"precio":1.9,"ean":"8480000868206","calorias":73,"proteinas":26.7,"carbohidratos":21,"grasas":2.4,"grasas_sat":0.9,"azucares":15.6,"fibra":4.2,"sal":1.08,"nutriscore":"c","nova":4,"aditivos":["E-407","E-451"]},{"nombre":"Refresco Coca-Cola Zero Zero","categoria":"Agua y refrescos","subcategoria":null,"precio":3.8,"ean":"5449000096203","calorias":0,"proteinas":0,"carbohidratos":0,"grasas":0,"grasas_sat":0,"azucares":0,"fibra":0,"sal":0.02,"nutriscore":"c","nova":4,"aditivos":["E-150D","E-331","E-338","E-950","E-951","E-952"]},{"nombre":"Maxi tortillas de trigo Hacendado","categoria":"Panadería y pastelería","subcategoria":null,"precio":1.5,"ean":"8480000808707","calorias":293,"proteinas":8.3,"carbohidratos":50,"grasas":5.8,"grasas_sat":2,"azucares":1.7,"fibra":4.2,"sal":1.64,"nutriscore":"c","nova":4,"aditivos":["E-202","E-282","E-296","E-415","E-422","E-471","E-500","E-920"]},{"nombre":"Panes con semillas","categoria":"Panadería y pastelería","subcategoria":null,"precio":1.5,"ean":"8402001051760","calorias":294,"proteinas":11,"carbohidratos":43,"grasas":8,"grasas_sat":1,"azucares":0.9,"fibra":3.6,"sal":1.18,"nutriscore":null,"nova":null,"aditivos":{}},{"nombre":"Castañas heladas de nata Hacendado","categoria":"Congelados","subcategoria":null,"precio":3,"ean":"8480000641458","calorias":392,"proteinas":2.9,"carbohidratos":27.9,"grasas":29.6,"grasas_sat":19.8,"azucares":26.8,"fibra":0,"sal":0.19,"nutriscore":"e","nova":null,"aditivos":{}},{"nombre":"Surtido bombones Senzza de chocolate negro 70%","categoria":"Azúcar, caramelos y chocolate","subcategoria":null,"precio":2.9,"ean":"8410109114157","calorias":560,"proteinas":7,"carbohidratos":40,"grasas":39,"grasas_sat":25,"azucares":37,"fibra":0,"sal":0.09,"nutriscore":"e","nova":4,"aditivos":"E-322"},{"nombre":"Crackers sin gluten Hacendado con romero","categoria":"Panadería y pastelería","subcategoria":null,"precio":1.7,"ean":"8008910231271","calorias":440,"proteinas":2.5,"carbohidratos":78,"grasas":13,"grasas_sat":2.3,"azucares":1.5,"fibra":0,"sal":2.1,"nutriscore":"d","nova":4,"aditivos":["E-14XX","E-392","E-412","E-471","E-500"]},{"nombre":"Harina de maíz blanco precocida Hacendado","categoria":"Panadería y pastelería","subcategoria":null,"precio":1.6,"ean":"8402001020957","calorias":357,"proteinas":9.2,"carbohidratos":75,"grasas":1.6,"grasas_sat":0.2,"azucares":0.6,"fibra":3,"sal":0,"nutriscore":null,"nova":null,"aditivos":{}},{"nombre":"Leche desnatada +Proteínas \u0026 calcio","categoria":"Huevos, leche y mantequilla","subcategoria":null,"precio":8.1,"ean":"8480000106766","calorias":113,"proteinas":15,"carbohidratos":12,"grasas":0.5,"grasas_sat":0.3,"azucares":12,"fibra":0,"sal":0.32,"nutriscore":"e","nova":1,"aditivos":"E-339"},{"nombre":"Chocolate negro 85% cacao extrafino y edulcorante Hacendado 0% azúcares añadidos","categoria":"Azúcar, caramelos y chocolate","subcategoria":null,"precio":2.3,"ean":"8402001025594","calorias":583,"proteinas":11,"carbohidratos":18,"grasas":51,"grasas_sat":32,"azucares":1,"fibra":15,"sal":0.16,"nutriscore":"d","nova":4,"aditivos":["E-322","E-965"]},{"nombre":"Patatas fritas onduladas sabor queso de cabra y cebolla caramelizada Hacendado","categoria":"Aperitivos","subcategoria":null,"precio":1.2,"ean":"8402001034114","calorias":525,"proteinas":6.1,"carbohidratos":49,"grasas":33,"grasas_sat":3,"azucares":2.4,"fibra":3.6,"sal":3.5,"nutriscore":"e","nova":4,"aditivos":["E-262","E-621","E-955"]},{"nombre":"Hummus de garbanzos Hacendado con pimiento del piquillo asado","categoria":"Pizzas y platos preparados","subcategoria":null,"precio":1.45,"ean":"8432089101422","calorias":308,"proteinas":5.6,"carbohidratos":7.2,"grasas":26.8,"grasas_sat":3.4,"azucares":0.3,"fibra":7.8,"sal":0.4,"nutriscore":"a","nova":3,"aditivos":["E-202","E-270","E-330"]},{"nombre":"Leche desnatada sin lactosa Hacendado","categoria":"Huevos, leche y mantequilla","subcategoria":null,"precio":0.91,"ean":"8480000103635","calorias":34,"proteinas":3.1,"carbohidratos":4.7,"grasas":0.3,"grasas_sat":0.2,"azucares":4.7,"fibra":0,"sal":0.13,"nutriscore":"b","nova":1,"aditivos":{}},{"nombre":"Masa fresca quebrada brisa Hacendado","categoria":"Panadería y pastelería","subcategoria":null,"precio":2.2,"ean":"8480000634641","calorias":378,"proteinas":6,"carbohidratos":44.7,"grasas":19.5,"grasas_sat":7.5,"azucares":0.5,"fibra":0,"sal":1,"nutriscore":"d","nova":1,"aditivos":{}},{"nombre":"Arroz cocido redondo Sabroz","categoria":"Arroz, legumbres y pasta","subcategoria":null,"precio":1.05,"ean":"8410184040723","calorias":148,"proteinas":3,"carbohidratos":24,"grasas":2.3,"grasas_sat":0.5,"azucares":0,"fibra":1.6,"sal":0.51,"nutriscore":"c","nova":4,"aditivos":"E-322"},{"nombre":"Sopa de pollo Hacendado con fideos finos","categoria":"Conservas, caldos y cremas","subcategoria":null,"precio":0.55,"ean":"8402001028830","calorias":24,"proteinas":1.1,"carbohidratos":4.3,"grasas":0.1,"grasas_sat":0,"azucares":0.2,"fibra":0.2,"sal":0.82,"nutriscore":null,"nova":4,"aditivos":["E-150A","E-392","E-621","E-635"]},{"nombre":"Barquillos rellenos con crema de cacao Hacendado","categoria":"Cereales y galletas","subcategoria":null,"precio":1,"ean":"8480000142399","calorias":522,"proteinas":5.5,"carbohidratos":61,"grasas":27.7,"grasas_sat":25.1,"azucares":38.9,"fibra":0,"sal":0.36,"nutriscore":"e","nova":4,"aditivos":"E-500"},{"nombre":"Queso rallado especial fundir mezcla Hacendado","categoria":"Charcutería y quesos","subcategoria":null,"precio":2,"ean":"8480000236227","calorias":284,"proteinas":19,"carbohidratos":7,"grasas":20,"grasas_sat":13,"azucares":0.5,"fibra":0,"sal":1.5,"nutriscore":"d","nova":4,"aditivos":["E-202","E-330","E-340","E-452","E-460"]},{"nombre":"Aceite de oliva virgen extra Hacendado Gran Selección","categoria":"Aceite, especias y salsas","subcategoria":null,"precio":5.75,"ean":"8480000047069","calorias":822,"proteinas":0,"carbohidratos":0,"grasas":91,"grasas_sat":13,"azucares":0,"fibra":0,"sal":0,"nutriscore":"b","nova":2,"aditivos":{}},{"nombre":"Pan rallado casero Hacendado","categoria":"Panadería y pastelería","subcategoria":null,"precio":1,"ean":"8480000823526","calorias":357,"proteinas":8.8,"carbohidratos":76.5,"grasas":1.8,"grasas_sat":0.4,"azucares":2.7,"fibra":0,"sal":1,"nutriscore":"a","nova":3,"aditivos":{}},{"nombre":"Jamón de pavo Hacendado","categoria":"Charcutería y quesos","subcategoria":null,"precio":2.85,"ean":"8480000592187","calorias":85,"proteinas":14,"carbohidratos":1.5,"grasas":2.5,"grasas_sat":0.9,"azucares":1.5,"fibra":0,"sal":1.5,"nutriscore":"c","nova":4,"aditivos":["E-301","E-407","E-451"]},{"nombre":"Ensalada mezcla gourmet maxi lavada","categoria":"Fruta y verdura","subcategoria":null,"precio":1.8,"ean":"8425779044475","calorias":21,"proteinas":1.5,"carbohidratos":2.2,"grasas":0.5,"grasas_sat":0.1,"azucares":1.9,"fibra":0,"sal":0.16,"nutriscore":null,"nova":null,"aditivos":{}},{"nombre":"Cogollos de lechuga","categoria":"Fruta y verdura","subcategoria":null,"precio":1.05,"ean":"8412276046064","calorias":60,"proteinas":1.2,"carbohidratos":1.8,"grasas":0.1,"grasas_sat":0,"azucares":0.3,"fibra":0.8,"sal":0,"nutriscore":"a","nova":null,"aditivos":{}},{"nombre":"Ajo tierno Hacendado ultracongelado","categoria":"Congelados","subcategoria":null,"precio":2.05,"ean":"8480000612885","calorias":37,"proteinas":1.9,"carbohidratos":4.7,"grasas":0.3,"grasas_sat":0.1,"azucares":3.4,"fibra":3.8,"sal":0.05,"nutriscore":"a","nova":1,"aditivos":{}},{"nombre":"Insecticida avispas Bosque Verde","categoria":"Limpieza y hogar","subcategoria":null,"precio":3.5,"ean":"8480000720566","calorias":492,"proteinas":6.4,"carbohidratos":60.3,"grasas":23.5,"grasas_sat":8.9,"azucares":17.9,"fibra":6.7,"sal":0,"nutriscore":"d","nova":null,"aditivos":{}},{"nombre":"Pipas de calabaza natural Hacendado peladas","categoria":"Aperitivos","subcategoria":null,"precio":1.7,"ean":"8480000341884","calorias":582,"proteinas":35.3,"carbohidratos":3,"grasas":47.9,"grasas_sat":8.5,"azucares":1.6,"fibra":5.5,"sal":0,"nutriscore":"a","nova":1,"aditivos":{}},{"nombre":"Yogur azucarado YogoMix Discos Hacendado con disquitos chocolateados","categoria":"Postres y yogures","subcategoria":null,"precio":1.3,"ean":"8480000677662","calorias":127,"proteinas":4.7,"carbohidratos":20,"grasas":3.1,"grasas_sat":2,"azucares":19,"fibra":0,"sal":0.11,"nutriscore":"c","nova":4,"aditivos":"E-414"},{"nombre":"Yogur griego con fresa Hacendado","categoria":"Postres y yogures","subcategoria":null,"precio":1.7,"ean":"8480000205315","calorias":140,"proteinas":3,"carbohidratos":14.1,"grasas":8,"grasas_sat":5.6,"azucares":13.3,"fibra":0,"sal":0.1,"nutriscore":"c","nova":4,"aditivos":["E-202","E-330","E-331","E-407","E-412"]},{"nombre":"Atún claro en escabeche blanco Hacendado","categoria":"Conservas, caldos y cremas","subcategoria":null,"precio":4.6,"ean":"8480000180315","calorias":108,"proteinas":21,"carbohidratos":0.8,"grasas":3.2,"grasas_sat":0.6,"azucares":0,"fibra":0,"sal":1.2,"nutriscore":null,"nova":3,"aditivos":{}},{"nombre":"Salsa de tomate Boloñesa Hacendado","categoria":"Aceite, especias y salsas","subcategoria":null,"precio":1.75,"ean":"8402001023705","calorias":100,"proteinas":5.1,"carbohidratos":7.6,"grasas":5.2,"grasas_sat":1.8,"azucares":6.2,"fibra":0,"sal":1.08,"nutriscore":null,"nova":4,"aditivos":"E-270"},{"nombre":"Mermelada de arándanos Hacendado","categoria":"Azúcar, caramelos y chocolate","subcategoria":null,"precio":1.95,"ean":"8402001011788","calorias":88,"proteinas":0.5,"carbohidratos":49,"grasas":0.2,"grasas_sat":0.1,"azucares":49,"fibra":0,"sal":0.01,"nutriscore":"d","nova":4,"aditivos":["E-330","E-440"]}];
+
+/* ============================================================
+   DESCRIPCIONES NOVA
+   ============================================================ */
+const NOVA_DESC = {
+  1: "Alimentos sin procesar o mínimamente procesados. La base de una dieta saludable.",
+  2: "Ingredientes culinarios procesados. Aceites, grasas, azúcar y sal usados para cocinar.",
+  3: "Alimentos procesados. Fabricados con 2-3 ingredientes, añadidos con sal, azúcar o grasa.",
+  4: "Ultraprocesados. Productos industriales con muchos aditivos y poco valor nutricional."
+};
+
+/* ============================================================
+   ALGORITMO DE PUNTUACIÓN
+   ============================================================ */
+function calcularPuntuacion(p) {
+  // Products without nutritional data (e.g. from full catalog merge) get no score
+  const hasNutriData = p.calorias != null || p.proteinas != null || p.carbohidratos != null || p.nutriscore != null;
+  if (!hasNutriData) {
+    return {
+      nutrition_score: null,
+      ingredients_score: null,
+      final_score: null,
+      nutrition_reasons: [],
+      ingredients_reasons: []
+    };
+  }
+
+  // ════════════════════════════════════════════
+  // NUTRITION SUB-SCORE (70% weight)
+  // ════════════════════════════════════════════
+  // Reflects the nutritional quality of the product based on
+  // Nutri-Score, salt, sugars, saturated fat, fiber, and protein.
+  // Weighted at 70% because dietary quality is the primary health
+  // determinant.
+  let nutrition_score = 100;
+  const nutrition_reasons = [];
+
+  // Nutri-Score
+  if (p.nutriscore) {
+    const ns = p.nutriscore.toUpperCase();
+    const nsMap = { A: 20, B: 10, C: 0, D: -10, E: -20 };
+    const v = nsMap[ns] !== undefined ? nsMap[ns] : 0;
+    nutrition_score += v;
+    nutrition_reasons.push({
+      r: v > 0 ? `Nutri-Score ${ns} (favorable)` : v < 0 ? `Nutri-Score ${ns} (desfavorable)` : `Nutri-Score ${ns}`,
+      d: v, tipo: v > 0 ? "pos" : v < 0 ? "neg" : "neutral"
+    });
+  }
+
+  // Azúcares
+  if (p.azucares > 12) {
+    nutrition_score -= 10;
+    nutrition_reasons.push({ r: `Azúcares altos (${p.azucares}g/100g)`, d: -10, tipo: "neg" });
+  }
+
+  // Grasas saturadas
+  if (p.grasas_sat > 5) {
+    nutrition_score -= 10;
+    nutrition_reasons.push({ r: `Grasas saturadas altas (${p.grasas_sat}g/100g)`, d: -10, tipo: "neg" });
+  }
+
+  // Sal
+  if (p.sal > 1.5) {
+    nutrition_score -= 10;
+    nutrition_reasons.push({ r: `Sal alta (${p.sal}g/100g)`, d: -10, tipo: "neg" });
+  }
+
+  // Fibra
+  if (p.fibra > 3) {
+    nutrition_score += 5;
+    nutrition_reasons.push({ r: `Buena fibra (${p.fibra}g/100g)`, d: 5, tipo: "pos" });
+  }
+
+  // Proteína
+  if (p.proteinas > 15) {
+    nutrition_score += 5;
+    nutrition_reasons.push({ r: `Rica en proteína (${p.proteinas}g/100g)`, d: 5, tipo: "pos" });
+  }
+
+  if (nutrition_reasons.length === 0) {
+    nutrition_reasons.push({ r: "Sin factores nutricionales destacables", d: 0, tipo: "neutral" });
+  }
+
+  nutrition_score = Math.max(0, Math.min(100, Math.round(nutrition_score)));
+
+  // ════════════════════════════════════════════
+  // INGREDIENTS SUB-SCORE (30% weight)
+  // ════════════════════════════════════════════
+  // Evaluates processing level (NOVA) and additive risk.
+  // Weighted at 30% because processing matters but is secondary
+  // to the base nutritional profile. This mirrors Yuka-style
+  // methodology and general nutritional science consensus.
+  let ingredients_score = 100;
+  const ingredients_reasons = [];
+
+  // Aditivos
+  let penalAdd = 0;
+  let numPeligrosos = 0, numVigilar = 0;
+  (p.aditivos || []).forEach(e => {
+    const info = ADDITIVE_INFO[e];
+    if (info) {
+      if (info.nivel === "danger") { penalAdd += 25; numPeligrosos++; }
+      else if (info.nivel === "warn") { penalAdd += 10; numVigilar++; }
+    }
+  });
+  if (penalAdd > 0) {
+    ingredients_score -= penalAdd;
+    const det = [];
+    if (numPeligrosos > 0) det.push(`${numPeligrosos} peligroso(s) -25 c/u`);
+    if (numVigilar > 0) det.push(`${numVigilar} a vigilar -10 c/u`);
+    ingredients_reasons.push({ r: `Aditivos: ${det.join(", ")}`, d: -penalAdd, tipo: "neg" });
+  } else if (p.aditivos && p.aditivos.length > 0) {
+    ingredients_reasons.push({ r: `Aditivos inocuos (${p.aditivos.length})`, d: 0, tipo: "neutral" });
+  } else {
+    ingredients_reasons.push({ r: "Sin aditivos", d: 0, tipo: "neutral" });
+  }
+
+  // NOVA
+  if (p.nova === 4) {
+    ingredients_score -= 15;
+    ingredients_reasons.push({ r: "Ultraprocesado (NOVA 4)", d: -15, tipo: "neg" });
+  } else if (p.nova != null) {
+    ingredients_reasons.push({
+      r: p.nova === 1 ? `No procesado (NOVA ${p.nova})` : `Procesado tipo ${p.nova} (NOVA ${p.nova})`,
+      d: 0, tipo: "neutral"
+    });
+  }
+
+  ingredients_score = Math.max(0, Math.min(100, Math.round(ingredients_score)));
+
+  // ════════════════════════════════════════════
+  // FINAL SCORE (weighted)
+  // ════════════════════════════════════════════
+  // 70% nutrition + 30% ingredients.
+  // Rationale: the nutritional profile is the strongest predictor
+  // of overall health impact. Processing degree and additives,
+  // while important, have a secondary effect when the base
+  // nutrition is sound.
+  let final_score = Math.round(0.7 * nutrition_score + 0.3 * ingredients_score);
+  final_score = Math.max(0, Math.min(100, final_score));
+
+  return {
+    nutrition_score,
+    ingredients_score,
+    final_score,
+    nutrition_reasons,
+    ingredients_reasons
+  };
+}
+
+/* ============================================================
+   AÑADIR PUNTUACIÓN A PRODUCTOS
+   ============================================================ */
+const seenProducts = new Set();
+const productosConScore = productos.map(p => {
+  // Normalizar aditivos: algunos productos vienen con {} en vez de [] (serializacion PS)
+  if (!Array.isArray(p.aditivos)) p.aditivos = [];
+  // Normalizar Nutri-Score: rechazar valores no válidos
+  if (p.nutriscore && typeof p.nutriscore === 'string') {
+    const u = p.nutriscore.trim().toUpperCase();
+    if (u === 'UNKNOWN' || u === 'NOT-APPLICABLE' || u === '' || !['A','B','C','D','E'].includes(u)) {
+      p.nutriscore = null;
+    } else {
+      p.nutriscore = u;
+    }
+  } else if (typeof p.nutriscore !== 'string') {
+    p.nutriscore = null;
+  }
+  // Normalizar NOVA: convertir a número o null
+  if (p.nova !== null && p.nova !== undefined) {
+    const n = Number(p.nova);
+    p.nova = (isNaN(n) || n < 1 || n > 4) ? null : n;
+  } else {
+    p.nova = null;
+  }
+  const result = calcularPuntuacion(p);
+  return { ...p, puntuacion: result.final_score, ...result };
+}).filter(p => {
+  const key = p.ean || `${p.nombre}::${p.categoria}`;
+  if (seenProducts.has(key)) return false;
+  seenProducts.add(key);
+  return true;
+});
+
+/* ============================================================
+   UTILIDADES
+   ============================================================ */
+function getRango(score) {
+  if (score === null || score === undefined) return { cls: "nodata", label: "— Sin datos", short: "—", colorVar: "chip-grey" };
+  if (score >= 75) return { cls: "excel", label: "🟢 Excelente", short: "Excelente", colorVar: "green" };
+  if (score >= 50) return { cls: "bueno", label: "🟡 Bueno", short: "Bueno", colorVar: "yellow" };
+  if (score >= 25) return { cls: "regular", label: "🟠 Regular", short: "Regular", colorVar: "orange" };
+  return { cls: "malo", label: "🔴 Malo", short: "Malo", colorVar: "red" };
+}
+
+function getMacroPredominante(p) {
+  const macros = { proteinas: p.proteinas, carbohidratos: p.carbohidratos, grasas: p.grasas };
+  let maxKey = "proteinas";
+  for (const k in macros) {
+    if (macros[k] > macros[maxKey]) maxKey = k;
+  }
+  return maxKey;
+}
+
+function escapeHtml(str) {
+  const div = document.createElement('div');
+  div.textContent = String(str);
+  return div.innerHTML;
+}
+
+function normalizeText(value) {
+  return String(value || "")
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .trim();
+}
+
+function getSearchTokens(value) {
+  return normalizeText(value)
+    .split(/\s+/)
+    .filter(Boolean);
+}
+
+function matchesSearch(producto, query) {
+  const tokens = getSearchTokens(query);
+  if (tokens.length === 0) return true;
+  const haystack = normalizeText([
+    producto.nombre,
+    producto.categoria,
+    producto.subcategoria,
+    producto.nutriscore,
+    producto.nova ? `nova ${producto.nova}` : ''
+  ].filter(Boolean).join(' '));
+  return tokens.every(token => haystack.includes(token));
+}
+
+function updateSummary(lista) {
+  const visible = lista.length;
+  const scoredList = lista.filter(p => p.puntuacion !== null && p.puntuacion !== undefined);
+  document.getElementById('statVisible').textContent = visible;
+  document.getElementById('statVisibleHint').textContent = `de ${productosConScore.length} productos`;
+
+  if (visible === 0) {
+    document.getElementById('statAverage').textContent = '—';
+    document.getElementById('statTopScore').textContent = '—';
+    document.getElementById('statTopName').textContent = 'Sin resultados';
+    document.getElementById('statBottomScore').textContent = '—';
+    document.getElementById('statBottomName').textContent = 'Sin resultados';
+    return;
+  }
+
+  const media = scoredList.length ? scoredList.reduce((acc, p) => acc + p.puntuacion, 0) / scoredList.length : 0;
+  const top = scoredList.length ? scoredList.reduce((best, item) => item.puntuacion > best.puntuacion ? item : best, scoredList[0]) : null;
+  const bottom = scoredList.length ? scoredList.reduce((worst, item) => item.puntuacion < worst.puntuacion ? item : worst, scoredList[0]) : null;
+
+  document.getElementById('statAverage').textContent = scoredList.length ? media.toFixed(1) : '—';
+  document.getElementById('statTopScore').textContent = top ? top.puntuacion : '—';
+  document.getElementById('statTopName').textContent = top ? top.nombre : 'Sin datos';
+  document.getElementById('statBottomScore').textContent = bottom ? bottom.puntuacion : '—';
+  document.getElementById('statBottomName').textContent = bottom ? bottom.nombre : 'Sin datos';
+}
+
+/* ============================================================
+   ESTADO
+   ============================================================ */
+let estado = {
+  search: "",
+  categoria: "",
+  rango: "",
+  sortColumn: "puntuacion",
+  sortDir: "desc",
+  expandedIndex: -1
+};
+
+/* ============================================================
+   POPULAR FILTRO DE CATEGORÍAS
+   ============================================================ */
+function poblarCategorias() {
+  const cats = [...new Set(productosConScore.map(p => p.categoria))].sort();
+  const sel = document.getElementById('categoryFilter');
+  cats.forEach(c => {
+    const opt = document.createElement('option');
+    opt.value = c;
+    opt.textContent = c;
+    sel.appendChild(opt);
+  });
+}
+
+/* ============================================================
+   RENDERIZAR TABLA
+   ============================================================ */
+function getFilteredSorted() {
+  let lista = productosConScore.slice();
+
+  // Search
+  if (estado.search) {
+    lista = lista.filter(p => matchesSearch(p, estado.search));
+  }
+  // Categoría
+  if (estado.categoria) {
+    lista = lista.filter(p => p.categoria === estado.categoria);
+  }
+  // Rango
+  if (estado.rango) {
+    lista = lista.filter(p => getRango(p.puntuacion).cls === estado.rango);
+  }
+  // Sort
+  const col = estado.sortColumn;
+  const dir = estado.sortDir === "asc" ? 1 : -1;
+  lista.sort((a, b) => {
+    let va = a[col], vb = b[col];
+    if (va === null || va === undefined) return 1;
+    if (vb === null || vb === undefined) return -1;
+    if (typeof va === "string") {
+      return va.localeCompare(vb, 'es') * dir;
+    }
+    return (va - vb) * dir;
+  });
+  return lista;
+}
+
+function renderChips(aditivos) {
+  if (aditivos.length === 0) {
+    return '<span class="no-add">✓ Sin aditivos</span>';
+  }
+  return '<div class="chip-list">' + aditivos.map(e => {
+    const info = ADDITIVE_INFO[e];
+    const nivel = info ? info.nivel : "safe";
+    return `<span class="chip ${nivel}">${e}</span>`;
+  }).join('') + '</div>';
+}
+
+function renderMacro(value, isDominant) {
+  const cls = isDominant ? "macro dominant" : "macro";
+  if (value == null || Number.isNaN(value)) {
+    return `<span class="${cls}">—</span>`;
+  }
+  return `<span class="${cls}">${value.toFixed(1)}g</span>`;
+}
+
+function renderRow(p, idx) {
+  const rango = getRango(p.puntuacion);
+  const macro = getMacroPredominante(p);
+  const opened = estado.expandedIndex === idx;
+  const hasScore = p.puntuacion !== null && p.puntuacion !== undefined;
+  const refValue = p.id || '—';
+  const barcodeValue = p.ean || '—';
+
+  return `
+    <tr class="product-row" data-idx="${idx}">
+      <td><div class="product-name">${escapeHtml(p.nombre)}</div></td>
+      <td><span class="product-cat">${escapeHtml(p.categoria)}</span></td>
+      <td>
+        <div class="meta-stack">
+          <div><span class="meta-label">Ref</span><br><span class="meta-value">${escapeHtml(refValue)}</span></div>
+          <div><span class="meta-label">EAN</span><br><span class="meta-value">${escapeHtml(barcodeValue)}</span></div>
+        </div>
+      </td>
+      <td class="score-cell">
+        ${hasScore ? `
+        <div class="score-badge ${rango.cls}">${p.puntuacion}</div>
+        <div class="score-bar"><div class="score-bar-fill" style="width:${p.puntuacion}%; background:var(--${rango.colorVar});"></div></div>
+        <div class="score-label ${rango.cls}">${rango.short}</div>
+        ` : `
+        <div style="text-align:center;color:var(--text-muted);font-size:0.82rem;padding:0.5rem 0;">—<br><span style="font-size:0.7rem;">sin datos</span></div>
+        `}
+      </td>
+      <td><span class="price">${p.precio.toFixed(2)}€</span></td>
+      <td class="macro">${p.calorias} kcal</td>
+      <td>${renderMacro(p.proteinas, macro === "proteinas")}</td>
+      <td>${renderMacro(p.carbohidratos, macro === "carbohidratos")}</td>
+      <td>${renderMacro(p.grasas, macro === "grasas")}</td>
+      <td>${renderChips(p.aditivos)}</td>
+    </tr>
+    ${opened ? renderDetalle(p, idx) : ''}
+  `.trim();
+}
+
+function renderDetalle(p, idx) {
+  const hasScore = p.final_score !== null && p.final_score !== undefined;
+
+  if (!hasScore) {
+    return `
+    <tr class="detail-row" data-detail-for="${idx}">
+      <td colspan="10">
+        <div class="detail-panel">
+          <div class="detail-section">
+            <div class="meta-grid">
+              <div class="meta-card"><div class="label">Referencia Mercadona</div><div class="value">${escapeHtml(p.id || '—')}</div></div>
+              <div class="meta-card"><div class="label">Barcode / EAN</div><div class="value">${escapeHtml(p.ean || '—')}</div></div>
+              <div class="meta-card"><div class="label">Fuente</div><div class="value">${escapeHtml(p.fuente_datos || 'mercadona')}</div></div>
+            </div>
+            <h4>Sin información nutricional</h4>
+            <p style="color:var(--text-muted);font-size:0.9rem;">
+              Este producto solo tiene datos del catálogo de Mercadona (nombre, precio, categoría).
+              No hay información nutricional disponible en Open Food Facts para calcular una puntuación.
+            </p>
+          </div>
+        </div>
+      </td>
+    </tr>`;
+  }
+
+  const finalRango = getRango(p.final_score);
+  const nutriRango = getRango(p.nutrition_score);
+  const ingRango = getRango(p.ingredients_score);
+
+  // NOVA
+  const novaItems = [1,2,3,4].map(n => {
+    const cls = p.nova === n ? "active" : "";
+    return `<span class="nova-item ${cls}">NOVA ${n}</span>`;
+  }).join('');
+
+  // Nutri-Score
+  const ns = p.nutriscore ? p.nutriscore.toUpperCase() : "NA";
+  const nutriCls = p.nutriscore ? `nutri-${ns}` : "nutri-na";
+
+  // Aditivos detalle
+  let addDetalle;
+  if (!p.aditivos || p.aditivos.length === 0) {
+    addDetalle = '<p class="no-add">✓ Este producto no contiene aditivos.</p>';
+  } else {
+    addDetalle = p.aditivos.map(e => {
+      const info = ADDITIVE_INFO[e] || { nivel: "safe", desc: "Aditivo sin clasificar." };
+      const nivelLabel = info.nivel === "danger" ? "Peligroso" : info.nivel === "warn" ? "A vigilar" : "Inocuo";
+      return `<div class="additive-item ${info.nivel}">
+        <div><span class="code">${e}</span> <span class="risk">${nivelLabel}</span></div>
+        <div class="desc">${info.desc}</div>
+      </div>`;
+    }).join('');
+  }
+
+  const renderReasons = (reasons) => reasons.map(r => {
+    const sign = r.d > 0 ? "+" : "";
+    const dClass = r.d > 0 ? "pos" : r.d < 0 ? "neg" : "neutral";
+    return `<div class="breakdown-row">
+      <span class="reason">${r.r}</span>
+      <span class="delta ${dClass}">${r.d === 0 ? "±0" : sign + r.d}</span>
+    </div>`;
+  }).join('');
+
+  return `
+    <tr class="detail-row" data-detail-for="${idx}">
+      <td colspan="10">
+        <div class="detail-panel">
+          <div class="detail-section">
+            <div class="meta-grid">
+              <div class="meta-card"><div class="label">Referencia Mercadona</div><div class="value">${escapeHtml(p.id || '—')}</div></div>
+              <div class="meta-card"><div class="label">Barcode / EAN</div><div class="value">${escapeHtml(p.ean || '—')}</div></div>
+              <div class="meta-card"><div class="label">Fuente</div><div class="value">${escapeHtml(p.fuente_datos || 'off')}</div></div>
+            </div>
+            <h4>Puntuación general</h4>
+            <div class="final-score-hero">
+              <div class="score-badge ${finalRango.cls}" style="width:68px;height:68px;font-size:1.6rem;">${p.final_score}</div>
+              <div style="font-weight:700;font-size:1.1rem;margin-top:0.3rem;">${finalRango.label}</div>
+              <div class="formula">70% Nutrici&oacute;n + 30% Ingredientes</div>
+            </div>
+
+            <div class="subscore-grid">
+              <div class="subscore-block">
+                <div class="subscore-header">
+                  <span>🍎 Nutrici&oacute;n <span class="weight">70%</span></span>
+                  <span class="value" style="color:var(--${nutriRango.colorVar});">${p.nutrition_score}</span>
+                </div>
+                <div class="breakdown">${renderReasons(p.nutrition_reasons)}</div>
+              </div>
+
+              <div class="subscore-block">
+                <div class="subscore-header">
+                  <span>🧪 Ingredientes <span class="weight">30%</span></span>
+                  <span class="value" style="color:var(--${ingRango.colorVar});">${p.ingredients_score}</span>
+                </div>
+                <div class="breakdown">${renderReasons(p.ingredients_reasons)}</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="detail-section">
+            <h4>Clasificación NOVA</h4>
+            <div class="nova-group">${novaItems}</div>
+            <p class="nova-desc">${NOVA_DESC[p.nova] || 'Clasificación NOVA no disponible en la base de datos de Open Food Facts.'}</p>
+
+            <h4 style="margin-top:1.2rem;">Nutri-Score</h4>
+            <div style="display:flex;align-items:center;gap:0.5rem;">
+              <span class="nutri-badge ${nutriCls}">${ns}</span>
+              <span style="font-size:0.85rem;color:var(--text-muted);">${ns === 'NA' ? 'No disponible' : 'Categoría del sistema Nutri-Score europeo'}</span>
+            </div>
+
+            <h4 style="margin-top:1.2rem;">Aditivos (${(p.aditivos || []).length})</h4>
+            <div class="additive-detail">${addDetalle}</div>
+          </div>
+        </div>
+      </td>
+    </tr>
+  `;
+}
+
+function render() {
+  const lista = getFilteredSorted();
+  const tbody = document.getElementById('productBody');
+  const noRes = document.getElementById('noResults');
+
+  if (lista.length === 0) {
+    tbody.innerHTML = '';
+    noRes.style.display = 'block';
+  } else {
+    noRes.style.display = 'none';
+    tbody.innerHTML = lista.map((p, i) => renderRow(p, i)).join('');
+  }
+
+  document.getElementById('counter').textContent = `Mostrando ${lista.length} de ${productosConScore.length} productos`;
+  updateSummary(lista);
+
+  // Update sort arrows
+  document.querySelectorAll('thead th[data-sort]').forEach(th => {
+    th.classList.remove('active');
+    const arrow = th.querySelector('.sort-arrow');
+    if (arrow) arrow.textContent = '↕';
+    if (th.dataset.sort === estado.sortColumn) {
+      th.classList.add('active');
+      if (arrow) arrow.textContent = estado.sortDir === "asc" ? "↑" : "↓";
+    }
+  });
+}
+
+/* ============================================================
+   DELEGACIÓN DE CLICKS EN LA TABLA
+   ============================================================ */
+document.getElementById('productBody').addEventListener('click', (ev) => {
+  const row = ev.target.closest('tr.product-row');
+  if (!row) return;
+  const idx = parseInt(row.dataset.idx, 10);
+  if (isNaN(idx)) return;
+  if (estado.expandedIndex === idx) {
+    estado.expandedIndex = -1;
+  } else {
+    estado.expandedIndex = idx;
+  }
+  render();
+});
+
+/* ============================================================
+   EVENTOS
+   ============================================================ */
+document.getElementById('searchInput').addEventListener('input', e => {
+  estado.search = e.target.value;
+  estado.expandedIndex = -1;
+  render();
+});
+
+document.getElementById('categoryFilter').addEventListener('change', e => {
+  estado.categoria = e.target.value;
+  estado.expandedIndex = -1;
+  render();
+});
+
+document.getElementById('healthFilter').addEventListener('change', e => {
+  estado.rango = e.target.value;
+  estado.expandedIndex = -1;
+  render();
+});
+
+document.getElementById('sortSelect').addEventListener('change', e => {
+  const parts = e.target.value.split('-');
+  estado.sortColumn = parts[0];
+  estado.sortDir = parts[1];
+  estado.expandedIndex = -1;
+  render();
+});
+
+document.getElementById('clearFilters').addEventListener('click', () => {
+  estado.search = "";
+  estado.categoria = "";
+  estado.rango = "";
+  estado.sortColumn = "puntuacion";
+  estado.sortDir = "desc";
+  estado.expandedIndex = -1;
+
+  document.getElementById('searchInput').value = "";
+  document.getElementById('categoryFilter').value = "";
+  document.getElementById('healthFilter').value = "";
+  document.getElementById('sortSelect').value = "puntuacion-desc";
+  render();
+});
+
+// Click en headers de columna para ordenar
+document.querySelectorAll('thead th[data-sort]').forEach(th => {
+  th.addEventListener('click', () => {
+    const col = th.dataset.sort;
+    if (estado.sortColumn === col) {
+      estado.sortDir = estado.sortDir === "asc" ? "desc" : "asc";
+    } else {
+      estado.sortColumn = col;
+      estado.sortDir = (col === "nombre" || col === "categoria") ? "asc" : "desc";
+    }
+    // Sync dropdown
+    const val = `${col}-${estado.sortDir}`;
+    const sortSel = document.getElementById('sortSelect');
+    for (const opt of sortSel.options) {
+      if (opt.value === val) { sortSel.value = val; break; }
+    }
+    render();
+  });
+});
+
+// Modo oscuro
+const themeToggle = document.getElementById('themeToggle');
+themeToggle.addEventListener('click', () => {
+  const current = document.body.dataset.theme || "light";
+  const next = current === "light" ? "dark" : "light";
+  document.body.dataset.theme = next;
+  themeToggle.textContent = next === "dark" ? "☀️" : "🌙";
+  try { localStorage.setItem('mercascore-theme', next); } catch(e) {}
+});
+
+// Restaurar tema
+try {
+  const saved = localStorage.getItem('mercascore-theme');
+  if (saved === "dark") {
+    document.body.dataset.theme = "dark";
+    themeToggle.textContent = "☀️";
+  }
+} catch(e) {}
+
+/* ============================================================
+   INICIALIZACIÓN
+   ============================================================ */
+poblarCategorias();
+render();
+</script>
+</body>
+</html>

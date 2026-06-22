@@ -1,0 +1,7 @@
+build.log
+build-stdout.log
+build-stderr.log
+build.pid
+*.pyc
+__pycache__/
+.DS_Store
