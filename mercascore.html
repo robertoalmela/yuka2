@@ -148,6 +148,136 @@
     border-color: var(--accent);
   }
 
+  .hero-strip {
+    max-width: 1500px;
+    margin: 1.2rem auto 0;
+    padding: 0 1.5rem;
+    display: grid;
+    grid-template-columns: minmax(0, 1.45fr) minmax(320px, 0.95fr);
+    gap: 0.9rem;
+  }
+  .hero-card, .legend-card, .active-filters {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow);
+  }
+  .hero-card {
+    border-radius: 18px;
+    padding: 1.1rem 1.2rem;
+  }
+  .hero-kicker {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    padding: 0.32rem 0.7rem;
+    border-radius: 999px;
+    background: var(--accent-soft);
+    color: var(--accent-dark);
+    font-size: 0.78rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  .hero-card h2 {
+    margin-top: 0.8rem;
+    font-size: 1.55rem;
+    line-height: 1.15;
+    letter-spacing: -0.03em;
+  }
+  .hero-card p {
+    margin-top: 0.55rem;
+    max-width: 70ch;
+    color: var(--text-muted);
+    font-size: 0.95rem;
+  }
+  .hero-points {
+    list-style: none;
+    margin-top: 0.9rem;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.7rem;
+  }
+  .hero-points li {
+    min-width: 0;
+    padding: 0.75rem 0.8rem;
+    border-radius: 14px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    font-size: 0.86rem;
+    color: var(--text-muted);
+  }
+  .hero-points strong {
+    display: block;
+    margin-bottom: 0.2rem;
+    color: var(--text);
+    font-size: 0.9rem;
+  }
+  .legend-card {
+    border-radius: 18px;
+    padding: 1rem 1.05rem;
+  }
+  .legend-card h3 {
+    font-size: 0.95rem;
+    margin-bottom: 0.6rem;
+  }
+  .legend-card p {
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    margin-bottom: 0.65rem;
+  }
+  .legend-list {
+    list-style: none;
+    display: grid;
+    gap: 0.55rem;
+  }
+  .legend-list li {
+    padding-left: 0.95rem;
+    position: relative;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+  }
+  .legend-list li::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0.58rem;
+    width: 0.38rem;
+    height: 0.38rem;
+    border-radius: 50%;
+    background: var(--accent);
+  }
+  .legend-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.45rem;
+    margin-top: 0.75rem;
+  }
+  .legend-pill, .filter-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.38rem 0.65rem;
+    border-radius: 999px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    font-size: 0.78rem;
+    font-weight: 700;
+  }
+  .legend-pill.full { color: var(--accent-dark); background: var(--accent-soft); }
+  .legend-pill.partial { color: #946200; background: rgba(255, 193, 7, 0.14); border-color: rgba(255, 193, 7, 0.25); }
+  .legend-pill.none { color: var(--text-muted); }
+  .active-filters {
+    max-width: 1500px;
+    margin: 0 auto 1rem;
+    padding: 0.75rem 1rem;
+    border-radius: 16px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.55rem;
+  }
+  .active-filters[hidden] { display: none; }
+  .filter-chip { background: var(--accent-soft); color: var(--accent-dark); border-color: transparent; }
+
   .summary-grid {
     max-width: 1500px;
     margin: 0 auto 1.2rem;
@@ -288,6 +418,17 @@
     text-transform: uppercase;
     letter-spacing: 0.03em;
   }
+  .score-note {
+    margin-top: 0.22rem;
+    font-size: 0.69rem;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    text-align: center;
+    color: var(--text-muted);
+  }
+  .score-note.partial { color: #946200; }
+  .score-note.full { color: var(--accent-dark); }
   .score-label.excel { color: var(--green); }
   .score-label.bueno { color: var(--yellow); }
   .score-label.regular { color: var(--orange); }
@@ -532,6 +673,8 @@
 
   /* ---------- Responsive ---------- */
   @media (max-width: 1100px) {
+    .hero-strip { grid-template-columns: 1fr; }
+    .hero-points { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .controls { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .controls input:first-child { grid-column: 1 / -1; }
     .summary-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -541,6 +684,8 @@
     .controls input:first-child { grid-column: 1 / -1; }
     .brand h1 { font-size: 1.5rem; }
     .brand p { display: none; }
+    .hero-card h2 { font-size: 1.3rem; }
+    .hero-points { grid-template-columns: 1fr; }
     .detail-panel { grid-template-columns: 1fr; gap: 1.5rem; padding: 1rem; }
     table { min-width: 100%; }
     .product-name { font-size: 0.85rem; }
@@ -549,6 +694,7 @@
     .controls { grid-template-columns: 1fr; }
     .header-actions { width: 100%; justify-content: space-between; }
     .summary-grid { grid-template-columns: 1fr; }
+    .active-filters { padding: 0.7rem 0.8rem; }
   }
 </style>
 </head>
@@ -566,6 +712,33 @@
     </div>
   </div>
 </header>
+
+<section class="hero-strip" aria-label="Cómo interpretar MercaScore">
+  <article class="hero-card">
+    <span class="hero-kicker">Decide más rápido</span>
+    <h2>Compara productos de Mercadona de un vistazo, con score completo o estimación parcial</h2>
+    <p>Cuando hay nutrición estructurada usamos un score completo. Cuando solo tenemos ingredientes del catálogo, calculamos una estimación parcial para no dejar fuera productos útiles.</p>
+    <ul class="hero-points">
+      <li><strong>Score completo</strong>70% nutrición + 30% ingredientes y aditivos.</li>
+      <li><strong>Score parcial</strong>Heurística por ingredientes, aditivos detectados y complejidad.</li>
+      <li><strong>Más contexto</strong>Abre cualquier fila para ver el porqué del resultado.</li>
+    </ul>
+  </article>
+  <aside class="legend-card">
+    <h3>Cómo leer esta vista</h3>
+    <p>La puntuación sirve para decidir rápido, no para sustituir criterio nutricional profesional.</p>
+    <ul class="legend-list">
+      <li>Los chips verdes/amarillos/rojos indican calidad relativa del score.</li>
+      <li>“Mejor” y “peor” siempre se refieren a la vista filtrada actual.</li>
+      <li>Si falta nutrición, la app lo deja claro y usa estimación parcial cuando es posible.</li>
+    </ul>
+    <div class="legend-pills">
+      <span class="legend-pill full">Completo</span>
+      <span class="legend-pill partial">Parcial</span>
+      <span class="legend-pill none">Sin datos</span>
+    </div>
+  </aside>
+</section>
 
 <div class="controls">
   <input type="text" id="searchInput" placeholder="🔍 Buscar producto..." autocomplete="off">
@@ -589,6 +762,8 @@
   <button type="button" class="clear-btn" id="clearFilters">Limpiar filtros</button>
 </div>
 
+<div class="active-filters" id="activeFilters" hidden></div>
+
 <section class="summary-grid" id="summaryGrid" aria-label="Resumen de resultados">
   <article class="summary-card">
     <div class="label">Resultados</div>
@@ -601,12 +776,12 @@
     <div class="hint">media del listado filtrado</div>
   </article>
   <article class="summary-card">
-    <div class="label">Mejor producto</div>
+    <div class="label">Mejor en esta vista</div>
     <div class="value" id="statTopScore">—</div>
     <div class="hint" id="statTopName">Sin resultados</div>
   </article>
   <article class="summary-card">
-    <div class="label">Peor producto</div>
+    <div class="label">Peor en esta vista</div>
     <div class="value" id="statBottomScore">—</div>
     <div class="hint" id="statBottomName">Sin resultados</div>
   </article>
@@ -764,130 +939,163 @@ const NOVA_DESC = {
 /* ============================================================
    ALGORITMO DE PUNTUACIÓN
    ============================================================ */
+const PARTIAL_SIGNAL_RULES = [
+  { re: /jarabe|glucosa|fructosa|dextrosa|maltodextrina/i, penalty: 8, reason: 'Azúcares o jarabes añadidos' },
+  { re: /edulcorante|aspartamo|sucralosa|acesulfamo|ciclamato|sacarina|steviol/i, penalty: 8, reason: 'Edulcorantes añadidos' },
+  { re: /aroma(?:s)?/i, penalty: 5, reason: 'Aromas añadidos' },
+  { re: /almid[oó]n modificado|modificado/i, penalty: 6, reason: 'Almidones o bases modificadas' },
+  { re: /emulgente|emulsionante|estabilizante|espesante|gelificante/i, penalty: 6, reason: 'Texturizantes industriales' },
+  { re: /colorante|conservador|potenciador/i, penalty: 7, reason: 'Señales de formulación industrial' }
+];
+
+function splitIngredientes(text) {
+  return String(text || '')
+    .replace(/\([^)]*\)/g, ' ')
+    .split(/[;,\.]/)
+    .map(part => part.trim())
+    .filter(Boolean);
+}
+
+function extractAditivosFromIngredientes(text) {
+  const matches = String(text || '').toUpperCase().match(/(?<![A-Z0-9])E\s*[-–]?\s*\d{3,4}[A-Z]?(?![A-Z0-9])/g) || [];
+  return [...new Set(matches.map(token => token.replace(/\s+/g, '').replace('–', '-').replace(/^E(?!-)/, 'E-')))];
+}
+
+function analyzeIngredientSignals(p) {
+  const ingredientes = String(p.ingredientes || '').trim();
+  const detectedAditivos = Array.isArray(p.aditivos) && p.aditivos.length ? [...new Set(p.aditivos)] : extractAditivosFromIngredientes(ingredientes);
+  if (!ingredientes && detectedAditivos.length === 0) {
+    return { available: false, detectedAditivos: [], ingredients_score: null, reasons: [] };
+  }
+
+  let ingredients_score = 100;
+  const reasons = [];
+  const ingredientParts = splitIngredientes(ingredientes);
+
+  if (detectedAditivos.length > 0) {
+    const numPeligrosos = detectedAditivos.filter(e => ADDITIVE_INFO[e]?.nivel === 'danger').length;
+    const numVigilar = detectedAditivos.filter(e => ADDITIVE_INFO[e]?.nivel === 'warn').length;
+    const penalAdd = numPeligrosos * 25 + numVigilar * 10;
+    ingredients_score -= penalAdd;
+    if (penalAdd > 0) {
+      const det = [];
+      if (numPeligrosos > 0) det.push(`${numPeligrosos} peligroso(s)`);
+      if (numVigilar > 0) det.push(`${numVigilar} a vigilar`);
+      reasons.push({ r: `Aditivos detectados: ${det.join(', ')}`, d: -penalAdd, tipo: 'neg' });
+    } else {
+      reasons.push({ r: `Aditivos inocuos (${detectedAditivos.length})`, d: 0, tipo: 'neutral' });
+    }
+  } else {
+    reasons.push({ r: 'Sin aditivos detectados', d: 0, tipo: 'neutral' });
+  }
+
+  if (ingredientParts.length >= 15) {
+    ingredients_score -= 15;
+    reasons.push({ r: `Lista muy larga (${ingredientParts.length} ingredientes)`, d: -15, tipo: 'neg' });
+  } else if (ingredientParts.length >= 9) {
+    ingredients_score -= 8;
+    reasons.push({ r: `Lista larga (${ingredientParts.length} ingredientes)`, d: -8, tipo: 'neg' });
+  } else if (ingredientParts.length >= 5) {
+    ingredients_score -= 3;
+    reasons.push({ r: `Lista media (${ingredientParts.length} ingredientes)`, d: -3, tipo: 'neg' });
+  }
+
+  for (const rule of PARTIAL_SIGNAL_RULES) {
+    if (rule.re.test(ingredientes)) {
+      ingredients_score -= rule.penalty;
+      reasons.push({ r: rule.reason, d: -rule.penalty, tipo: 'neg' });
+    }
+  }
+
+  if (p.nova === 4) {
+    ingredients_score -= 15;
+    reasons.push({ r: 'Ultraprocesado (NOVA 4)', d: -15, tipo: 'neg' });
+  } else if (p.nova != null) {
+    reasons.push({ r: p.nova === 1 ? `No procesado (NOVA ${p.nova})` : `Procesado tipo ${p.nova} (NOVA ${p.nova})`, d: 0, tipo: 'neutral' });
+  }
+
+  ingredients_score = Math.max(0, Math.min(100, Math.round(ingredients_score)));
+  return { available: true, detectedAditivos, ingredients_score, reasons, ingredientCount: ingredientParts.length };
+}
+
 function calcularPuntuacion(p) {
-  // Products without nutritional data (e.g. from full catalog merge) get no score
   const hasNutriData = p.calorias != null || p.proteinas != null || p.carbohidratos != null || p.nutriscore != null;
+  const ingredientAnalysis = analyzeIngredientSignals(p);
+
   if (!hasNutriData) {
+    if (!ingredientAnalysis.available) {
+      return {
+        nutrition_score: null,
+        ingredients_score: null,
+        final_score: null,
+        nutrition_reasons: [],
+        ingredients_reasons: [],
+        score_basis: 'none',
+        score_method_label: 'Sin datos suficientes',
+        detected_additives: []
+      };
+    }
+
     return {
       nutrition_score: null,
-      ingredients_score: null,
-      final_score: null,
-      nutrition_reasons: [],
-      ingredients_reasons: []
+      ingredients_score: ingredientAnalysis.ingredients_score,
+      final_score: ingredientAnalysis.ingredients_score,
+      nutrition_reasons: [{ r: 'Sin información nutricional estructurada', d: 0, tipo: 'neutral' }],
+      ingredients_reasons: ingredientAnalysis.reasons,
+      score_basis: 'partial',
+      score_method_label: 'Estimación parcial por ingredientes',
+      detected_additives: ingredientAnalysis.detectedAditivos
     };
   }
 
-  // ════════════════════════════════════════════
-  // NUTRITION SUB-SCORE (70% weight)
-  // ════════════════════════════════════════════
-  // Reflects the nutritional quality of the product based on
-  // Nutri-Score, salt, sugars, saturated fat, fiber, and protein.
-  // Weighted at 70% because dietary quality is the primary health
-  // determinant.
   let nutrition_score = 100;
   const nutrition_reasons = [];
 
-  // Nutri-Score
   if (p.nutriscore) {
     const ns = p.nutriscore.toUpperCase();
     const nsMap = { A: 20, B: 10, C: 0, D: -10, E: -20 };
     const v = nsMap[ns] !== undefined ? nsMap[ns] : 0;
     nutrition_score += v;
-    nutrition_reasons.push({
-      r: v > 0 ? `Nutri-Score ${ns} (favorable)` : v < 0 ? `Nutri-Score ${ns} (desfavorable)` : `Nutri-Score ${ns}`,
-      d: v, tipo: v > 0 ? "pos" : v < 0 ? "neg" : "neutral"
-    });
+    nutrition_reasons.push({ r: v > 0 ? `Nutri-Score ${ns} (favorable)` : v < 0 ? `Nutri-Score ${ns} (desfavorable)` : `Nutri-Score ${ns}`, d: v, tipo: v > 0 ? 'pos' : v < 0 ? 'neg' : 'neutral' });
   }
-
-  // Azúcares
   if (p.azucares > 12) {
     nutrition_score -= 10;
-    nutrition_reasons.push({ r: `Azúcares altos (${p.azucares}g/100g)`, d: -10, tipo: "neg" });
+    nutrition_reasons.push({ r: `Azúcares altos (${p.azucares}g/100g)`, d: -10, tipo: 'neg' });
   }
-
-  // Grasas saturadas
   if (p.grasas_sat > 5) {
     nutrition_score -= 10;
-    nutrition_reasons.push({ r: `Grasas saturadas altas (${p.grasas_sat}g/100g)`, d: -10, tipo: "neg" });
+    nutrition_reasons.push({ r: `Grasas saturadas altas (${p.grasas_sat}g/100g)`, d: -10, tipo: 'neg' });
   }
-
-  // Sal
   if (p.sal > 1.5) {
-    nutrition_score -= 10;
-    nutrition_reasons.push({ r: `Sal alta (${p.sal}g/100g)`, d: -10, tipo: "neg" });
+    nutrition_score -= 15;
+    nutrition_reasons.push({ r: `Sal alta (${p.sal}g/100g)`, d: -15, tipo: 'neg' });
+  } else if (p.sal > 0.3) {
+    nutrition_score -= 5;
+    nutrition_reasons.push({ r: `Sal moderada (${p.sal}g/100g)`, d: -5, tipo: 'neg' });
   }
-
-  // Fibra
-  if (p.fibra > 3) {
+  if (p.fibra >= 6) {
+    nutrition_score += 10;
+    nutrition_reasons.push({ r: `Fibra alta (${p.fibra}g/100g)`, d: +10, tipo: 'pos' });
+  } else if (p.fibra >= 3) {
     nutrition_score += 5;
-    nutrition_reasons.push({ r: `Buena fibra (${p.fibra}g/100g)`, d: 5, tipo: "pos" });
+    nutrition_reasons.push({ r: `Buena fibra (${p.fibra}g/100g)`, d: +5, tipo: 'pos' });
   }
-
-  // Proteína
-  if (p.proteinas > 15) {
+  if (p.proteinas >= 10) {
     nutrition_score += 5;
-    nutrition_reasons.push({ r: `Rica en proteína (${p.proteinas}g/100g)`, d: 5, tipo: "pos" });
+    nutrition_reasons.push({ r: `Proteínas altas (${p.proteinas}g/100g)`, d: +5, tipo: 'pos' });
   }
-
-  if (nutrition_reasons.length === 0) {
-    nutrition_reasons.push({ r: "Sin factores nutricionales destacables", d: 0, tipo: "neutral" });
-  }
-
   nutrition_score = Math.max(0, Math.min(100, Math.round(nutrition_score)));
 
-  // ════════════════════════════════════════════
-  // INGREDIENTS SUB-SCORE (30% weight)
-  // ════════════════════════════════════════════
-  // Evaluates processing level (NOVA) and additive risk.
-  // Weighted at 30% because processing matters but is secondary
-  // to the base nutritional profile. This mirrors Yuka-style
-  // methodology and general nutritional science consensus.
-  let ingredients_score = 100;
-  const ingredients_reasons = [];
-
-  // Aditivos
-  let penalAdd = 0;
-  let numPeligrosos = 0, numVigilar = 0;
-  (p.aditivos || []).forEach(e => {
-    const info = ADDITIVE_INFO[e];
-    if (info) {
-      if (info.nivel === "danger") { penalAdd += 25; numPeligrosos++; }
-      else if (info.nivel === "warn") { penalAdd += 10; numVigilar++; }
-    }
-  });
-  if (penalAdd > 0) {
-    ingredients_score -= penalAdd;
-    const det = [];
-    if (numPeligrosos > 0) det.push(`${numPeligrosos} peligroso(s) -25 c/u`);
-    if (numVigilar > 0) det.push(`${numVigilar} a vigilar -10 c/u`);
-    ingredients_reasons.push({ r: `Aditivos: ${det.join(", ")}`, d: -penalAdd, tipo: "neg" });
-  } else if (p.aditivos && p.aditivos.length > 0) {
-    ingredients_reasons.push({ r: `Aditivos inocuos (${p.aditivos.length})`, d: 0, tipo: "neutral" });
-  } else {
-    ingredients_reasons.push({ r: "Sin aditivos", d: 0, tipo: "neutral" });
-  }
-
-  // NOVA
-  if (p.nova === 4) {
+  let ingredients_score = ingredientAnalysis.available ? ingredientAnalysis.ingredients_score : 100;
+  const ingredients_reasons = ingredientAnalysis.available ? [...ingredientAnalysis.reasons] : [{ r: 'Sin ingredientes detallados', d: 0, tipo: 'neutral' }];
+  if (!ingredientAnalysis.available && p.nova === 4) {
     ingredients_score -= 15;
-    ingredients_reasons.push({ r: "Ultraprocesado (NOVA 4)", d: -15, tipo: "neg" });
-  } else if (p.nova != null) {
-    ingredients_reasons.push({
-      r: p.nova === 1 ? `No procesado (NOVA ${p.nova})` : `Procesado tipo ${p.nova} (NOVA ${p.nova})`,
-      d: 0, tipo: "neutral"
-    });
+    ingredients_reasons.push({ r: 'Ultraprocesado (NOVA 4)', d: -15, tipo: 'neg' });
+  } else if (!ingredientAnalysis.available && p.nova != null) {
+    ingredients_reasons.push({ r: p.nova === 1 ? `No procesado (NOVA ${p.nova})` : `Procesado tipo ${p.nova} (NOVA ${p.nova})`, d: 0, tipo: 'neutral' });
   }
-
   ingredients_score = Math.max(0, Math.min(100, Math.round(ingredients_score)));
 
-  // ════════════════════════════════════════════
-  // FINAL SCORE (weighted)
-  // ════════════════════════════════════════════
-  // 70% nutrition + 30% ingredients.
-  // Rationale: the nutritional profile is the strongest predictor
-  // of overall health impact. Processing degree and additives,
-  // while important, have a secondary effect when the base
-  // nutrition is sound.
   let final_score = Math.round(0.7 * nutrition_score + 0.3 * ingredients_score);
   final_score = Math.max(0, Math.min(100, final_score));
 
@@ -896,7 +1104,10 @@ function calcularPuntuacion(p) {
     ingredients_score,
     final_score,
     nutrition_reasons,
-    ingredients_reasons
+    ingredients_reasons,
+    score_basis: 'full',
+    score_method_label: 'Score completo',
+    detected_additives: ingredientAnalysis.detectedAditivos
   };
 }
 
@@ -905,35 +1116,30 @@ function calcularPuntuacion(p) {
    ============================================================ */
 const seenProducts = new Set();
 const productosConScore = productos.map(p => {
-  // Normalizar aditivos: algunos productos vienen con {} en vez de [] (serializacion PS)
-  if (!Array.isArray(p.aditivos)) p.aditivos = [];
-  // Normalizar Nutri-Score: rechazar valores no válidos
-  if (p.nutriscore && typeof p.nutriscore === 'string') {
-    const u = p.nutriscore.trim().toUpperCase();
-    if (u === 'UNKNOWN' || u === 'NOT-APPLICABLE' || u === '' || !['A','B','C','D','E'].includes(u)) {
-      p.nutriscore = null;
-    } else {
-      p.nutriscore = u;
-    }
-  } else if (typeof p.nutriscore !== 'string') {
-    p.nutriscore = null;
+  const normalized = { ...p };
+  if (!Array.isArray(normalized.aditivos)) normalized.aditivos = [];
+  normalized.ingredientes = normalized.ingredientes || null;
+  if (normalized.nutriscore && typeof normalized.nutriscore === 'string') {
+    const u = normalized.nutriscore.trim().toUpperCase();
+    normalized.nutriscore = (u === 'UNKNOWN' || u === 'NOT-APPLICABLE' || u === '' || !['A','B','C','D','E'].includes(u)) ? null : u;
+  } else if (typeof normalized.nutriscore !== 'string') {
+    normalized.nutriscore = null;
   }
-  // Normalizar NOVA: convertir a número o null
-  if (p.nova !== null && p.nova !== undefined) {
-    const n = Number(p.nova);
-    p.nova = (isNaN(n) || n < 1 || n > 4) ? null : n;
+  if (normalized.nova !== null && normalized.nova !== undefined) {
+    const n = Number(normalized.nova);
+    normalized.nova = (isNaN(n) || n < 1 || n > 4) ? null : n;
   } else {
-    p.nova = null;
+    normalized.nova = null;
   }
-  const result = calcularPuntuacion(p);
-  return { ...p, puntuacion: result.final_score, ...result };
+  const result = calcularPuntuacion(normalized);
+  const mergedAditivos = normalized.aditivos.length ? normalized.aditivos : (result.detected_additives || []);
+  return { ...normalized, aditivos: mergedAditivos, puntuacion: result.final_score, ...result };
 }).filter(p => {
   const key = p.ean || `${p.nombre}::${p.categoria}`;
   if (seenProducts.has(key)) return false;
   seenProducts.add(key);
   return true;
 });
-
 /* ============================================================
    UTILIDADES
    ============================================================ */
@@ -990,8 +1196,10 @@ function matchesSearch(producto, query) {
 function updateSummary(lista) {
   const visible = lista.length;
   const scoredList = lista.filter(p => p.puntuacion !== null && p.puntuacion !== undefined);
+  const fullCount = lista.filter(p => p.score_basis === 'full').length;
+  const partialCount = lista.filter(p => p.score_basis === 'partial').length;
   document.getElementById('statVisible').textContent = visible;
-  document.getElementById('statVisibleHint').textContent = `de ${productosConScore.length} productos`;
+  document.getElementById('statVisibleHint').textContent = `${fullCount} completos · ${partialCount} parciales`;
 
   if (visible === 0) {
     document.getElementById('statAverage').textContent = '—';
@@ -1008,11 +1216,29 @@ function updateSummary(lista) {
 
   document.getElementById('statAverage').textContent = scoredList.length ? media.toFixed(1) : '—';
   document.getElementById('statTopScore').textContent = top ? top.puntuacion : '—';
-  document.getElementById('statTopName').textContent = top ? top.nombre : 'Sin datos';
+  document.getElementById('statTopName').textContent = top ? `${top.nombre} · ${top.score_basis === 'partial' ? 'parcial' : 'completo'}` : 'Sin datos';
   document.getElementById('statBottomScore').textContent = bottom ? bottom.puntuacion : '—';
-  document.getElementById('statBottomName').textContent = bottom ? bottom.nombre : 'Sin datos';
+  document.getElementById('statBottomName').textContent = bottom ? `${bottom.nombre} · ${bottom.score_basis === 'partial' ? 'parcial' : 'completo'}` : 'Sin datos';
 }
 
+function renderActiveFilters(lista) {
+  const chips = [];
+  if (estado.search) chips.push(`Búsqueda: ${escapeHtml(estado.search)}`);
+  if (estado.categoria) chips.push(`Categoría: ${escapeHtml(estado.categoria)}`);
+  if (estado.rango) {
+    const rangeLabel = estado.rango === 'excel' ? 'Excelente' : estado.rango === 'bueno' ? 'Bueno' : estado.rango === 'regular' ? 'Regular' : 'Malo';
+    chips.push(`Rango: ${rangeLabel}`);
+  }
+  chips.push(`Vista: ${lista.length} / ${productosConScore.length}`);
+  const wrap = document.getElementById('activeFilters');
+  if (chips.length <= 1) {
+    wrap.hidden = true;
+    wrap.innerHTML = '';
+    return;
+  }
+  wrap.hidden = false;
+  wrap.innerHTML = chips.map(label => `<span class="filter-chip">${label}</span>`).join('');
+}
 /* ============================================================
    ESTADO
    ============================================================ */
@@ -1085,10 +1311,11 @@ function renderChips(aditivos) {
 
 function renderMacro(value, isDominant) {
   const cls = isDominant ? "macro dominant" : "macro";
-  if (value == null || Number.isNaN(value)) {
+  const num = Number(value);
+  if (value == null || Number.isNaN(num)) {
     return `<span class="${cls}">—</span>`;
   }
-  return `<span class="${cls}">${value.toFixed(1)}g</span>`;
+  return `<span class="${cls}">${num.toFixed(1)}g</span>`;
 }
 
 function renderRow(p, idx) {
@@ -1098,6 +1325,7 @@ function renderRow(p, idx) {
   const hasScore = p.puntuacion !== null && p.puntuacion !== undefined;
   const refValue = p.id || '—';
   const barcodeValue = p.ean || '—';
+  const scoreNote = p.score_basis === 'partial' ? 'Estimación' : p.score_basis === 'full' ? 'Completo' : 'Sin datos';
 
   return `
     <tr class="product-row" data-idx="${idx}">
@@ -1114,12 +1342,13 @@ function renderRow(p, idx) {
         <div class="score-badge ${rango.cls}">${p.puntuacion}</div>
         <div class="score-bar"><div class="score-bar-fill" style="width:${p.puntuacion}%; background:var(--${rango.colorVar});"></div></div>
         <div class="score-label ${rango.cls}">${rango.short}</div>
+        <div class="score-note ${p.score_basis === 'partial' ? 'partial' : 'full'}">${scoreNote}</div>
         ` : `
         <div style="text-align:center;color:var(--text-muted);font-size:0.82rem;padding:0.5rem 0;">—<br><span style="font-size:0.7rem;">sin datos</span></div>
         `}
       </td>
       <td><span class="price">${p.precio.toFixed(2)}€</span></td>
-      <td class="macro">${p.calorias} kcal</td>
+      <td class="macro">${p.calorias != null ? p.calorias : '—'} ${p.calorias != null ? 'kcal' : ''}</td>
       <td>${renderMacro(p.proteinas, macro === "proteinas")}</td>
       <td>${renderMacro(p.carbohidratos, macro === "carbohidratos")}</td>
       <td>${renderMacro(p.grasas, macro === "grasas")}</td>
@@ -1142,11 +1371,11 @@ function renderDetalle(p, idx) {
               <div class="meta-card"><div class="label">Referencia Mercadona</div><div class="value">${escapeHtml(p.id || '—')}</div></div>
               <div class="meta-card"><div class="label">Barcode / EAN</div><div class="value">${escapeHtml(p.ean || '—')}</div></div>
               <div class="meta-card"><div class="label">Fuente</div><div class="value">${escapeHtml(p.fuente_datos || 'mercadona')}</div></div>
+              <div class="meta-card"><div class="label">Cobertura score</div><div class="value">Sin datos</div></div>
             </div>
-            <h4>Sin información nutricional</h4>
+            <h4>Sin información suficiente</h4>
             <p style="color:var(--text-muted);font-size:0.9rem;">
-              Este producto solo tiene datos del catálogo de Mercadona (nombre, precio, categoría).
-              No hay información nutricional disponible en Open Food Facts para calcular una puntuación.
+              Este producto no tiene nutrición estructurada ni ingredientes legibles para estimar la puntuación.
             </p>
           </div>
         </div>
@@ -1157,25 +1386,23 @@ function renderDetalle(p, idx) {
   const finalRango = getRango(p.final_score);
   const nutriRango = getRango(p.nutrition_score);
   const ingRango = getRango(p.ingredients_score);
+  const isPartial = p.score_basis === 'partial';
 
-  // NOVA
   const novaItems = [1,2,3,4].map(n => {
-    const cls = p.nova === n ? "active" : "";
+    const cls = p.nova === n ? 'active' : '';
     return `<span class="nova-item ${cls}">NOVA ${n}</span>`;
   }).join('');
 
-  // Nutri-Score
-  const ns = p.nutriscore ? p.nutriscore.toUpperCase() : "NA";
-  const nutriCls = p.nutriscore ? `nutri-${ns}` : "nutri-na";
+  const ns = p.nutriscore ? p.nutriscore.toUpperCase() : 'NA';
+  const nutriCls = p.nutriscore ? `nutri-${ns}` : 'nutri-na';
 
-  // Aditivos detalle
   let addDetalle;
   if (!p.aditivos || p.aditivos.length === 0) {
-    addDetalle = '<p class="no-add">✓ Este producto no contiene aditivos.</p>';
+    addDetalle = '<p class="no-add">✓ No se detectan aditivos en los datos disponibles.</p>';
   } else {
     addDetalle = p.aditivos.map(e => {
-      const info = ADDITIVE_INFO[e] || { nivel: "safe", desc: "Aditivo sin clasificar." };
-      const nivelLabel = info.nivel === "danger" ? "Peligroso" : info.nivel === "warn" ? "A vigilar" : "Inocuo";
+      const info = ADDITIVE_INFO[e] || { nivel: 'safe', desc: 'Aditivo sin clasificar.' };
+      const nivelLabel = info.nivel === 'danger' ? 'Peligroso' : info.nivel === 'warn' ? 'A vigilar' : 'Inocuo';
       return `<div class="additive-item ${info.nivel}">
         <div><span class="code">${e}</span> <span class="risk">${nivelLabel}</span></div>
         <div class="desc">${info.desc}</div>
@@ -1184,11 +1411,11 @@ function renderDetalle(p, idx) {
   }
 
   const renderReasons = (reasons) => reasons.map(r => {
-    const sign = r.d > 0 ? "+" : "";
-    const dClass = r.d > 0 ? "pos" : r.d < 0 ? "neg" : "neutral";
+    const sign = r.d > 0 ? '+' : '';
+    const dClass = r.d > 0 ? 'pos' : r.d < 0 ? 'neg' : 'neutral';
     return `<div class="breakdown-row">
       <span class="reason">${r.r}</span>
-      <span class="delta ${dClass}">${r.d === 0 ? "±0" : sign + r.d}</span>
+      <span class="delta ${dClass}">${r.d === 0 ? '±0' : sign + r.d}</span>
     </div>`;
   }).join('');
 
@@ -1201,26 +1428,27 @@ function renderDetalle(p, idx) {
               <div class="meta-card"><div class="label">Referencia Mercadona</div><div class="value">${escapeHtml(p.id || '—')}</div></div>
               <div class="meta-card"><div class="label">Barcode / EAN</div><div class="value">${escapeHtml(p.ean || '—')}</div></div>
               <div class="meta-card"><div class="label">Fuente</div><div class="value">${escapeHtml(p.fuente_datos || 'off')}</div></div>
+              <div class="meta-card"><div class="label">Cobertura score</div><div class="value">${isPartial ? 'Parcial' : 'Completa'}</div></div>
             </div>
             <h4>Puntuación general</h4>
             <div class="final-score-hero">
               <div class="score-badge ${finalRango.cls}" style="width:68px;height:68px;font-size:1.6rem;">${p.final_score}</div>
               <div style="font-weight:700;font-size:1.1rem;margin-top:0.3rem;">${finalRango.label}</div>
-              <div class="formula">70% Nutrici&oacute;n + 30% Ingredientes</div>
+              <div class="formula">${isPartial ? 'Estimación parcial basada en ingredientes y señales del producto' : '70% Nutrición + 30% Ingredientes'}</div>
             </div>
 
             <div class="subscore-grid">
               <div class="subscore-block">
                 <div class="subscore-header">
-                  <span>🍎 Nutrici&oacute;n <span class="weight">70%</span></span>
-                  <span class="value" style="color:var(--${nutriRango.colorVar});">${p.nutrition_score}</span>
+                  <span>🍎 Nutrición <span class="weight">${isPartial ? 'sin peso' : '70%'}</span></span>
+                  <span class="value" style="color:var(--${nutriRango.colorVar});">${p.nutrition_score ?? '—'}</span>
                 </div>
                 <div class="breakdown">${renderReasons(p.nutrition_reasons)}</div>
               </div>
 
               <div class="subscore-block">
                 <div class="subscore-header">
-                  <span>🧪 Ingredientes <span class="weight">30%</span></span>
+                  <span>🧪 Ingredientes <span class="weight">${isPartial ? '100%' : '30%'}</span></span>
                   <span class="value" style="color:var(--${ingRango.colorVar});">${p.ingredients_score}</span>
                 </div>
                 <div class="breakdown">${renderReasons(p.ingredients_reasons)}</div>
@@ -1238,6 +1466,8 @@ function renderDetalle(p, idx) {
               <span class="nutri-badge ${nutriCls}">${ns}</span>
               <span style="font-size:0.85rem;color:var(--text-muted);">${ns === 'NA' ? 'No disponible' : 'Categoría del sistema Nutri-Score europeo'}</span>
             </div>
+
+            ${p.ingredientes ? `<h4 style="margin-top:1.2rem;">Ingredientes</h4><p style="font-size:0.88rem;color:var(--text-muted);line-height:1.6;">${escapeHtml(p.ingredientes)}</p>` : ''}
 
             <h4 style="margin-top:1.2rem;">Aditivos (${(p.aditivos || []).length})</h4>
             <div class="additive-detail">${addDetalle}</div>
@@ -1261,8 +1491,11 @@ function render() {
     tbody.innerHTML = lista.map((p, i) => renderRow(p, i)).join('');
   }
 
-  document.getElementById('counter').textContent = `Mostrando ${lista.length} de ${productosConScore.length} productos`;
+  const fullCount = lista.filter(p => p.score_basis === 'full').length;
+  const partialCount = lista.filter(p => p.score_basis === 'partial').length;
+  document.getElementById('counter').textContent = `${lista.length} visibles · ${fullCount} completos · ${partialCount} parciales`;
   updateSummary(lista);
+  renderActiveFilters(lista);
 
   // Update sort arrows
   document.querySelectorAll('thead th[data-sort]').forEach(th => {

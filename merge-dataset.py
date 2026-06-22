@@ -1,152 +1,163 @@
-#!/usr/bin/env python3
-"""
-merge-dataset.py — Merge full Mercadona catalog (with EANs) + Open Food Facts subset.
+import json
+import re
+import unicodedata
+from pathlib import Path
 
-Reads:
-  - data-mercadona-ean.json  (full catalog ~4386 products, includes EAN from Mercadona API)
-  - data-final.json          (enriched subset ~137 products with OFF nutritional data)
+BASE_DIR = Path(__file__).resolve().parent
+RAW_CANDIDATES = [
+    BASE_DIR / "data-mercadona-ean.json",
+    BASE_DIR / "data-mercadona-raw.json",
+]
+ENRICHED_FILE = BASE_DIR / "data-final.json"
+OUTPUT_FILE = BASE_DIR / "data-completo.json"
 
-  Fallback: if data-mercadona-ean.json is missing, uses data-mercadona-raw.json
-            (no EAN column, so name+categoria matching only).
-
-Writes:
-  - data-completo.json       (all products merged, score_disponible + fuente_datos flags)
-
-No external dependencies — only uses Python stdlib.
-"""
-
-import json, os, re, unicodedata, sys
-
-NUTRITIONAL_FIELDS = [
-    'calorias', 'proteinas', 'carbohidratos', 'grasas',
-    'grasas_sat', 'azucares', 'fibra', 'sal', 'nutriscore',
-    'nova', 'aditivos'
+NUTRITION_FIELDS = [
+    "calorias",
+    "proteinas",
+    "carbohidratos",
+    "grasas",
+    "grasas_sat",
+    "azucares",
+    "fibra",
+    "sal",
+    "nutriscore",
+    "nova",
 ]
 
+MOJIBAKE_MARKERS = ("Ã", "Â", "â", "€", "™", "œ", "ž", "�")
+ADDITIVE_RE = re.compile(r"(?<![A-Z0-9])E\s*[-–]?\s*(\d{3,4})([A-Z]?)(?![A-Z0-9])", re.I)
+ROMAN_SUFFIXES = {"I", "II", "III", "IV", "V"}
 
-def normalize(text):
+
+def load_json(path: Path):
+    return json.loads(path.read_text(encoding="utf-8-sig"))
+
+
+def normalize(value: str) -> str:
+    value = unicodedata.normalize("NFD", value or "")
+    value = "".join(ch for ch in value if unicodedata.category(ch) != "Mn")
+    return re.sub(r"\s+", " ", value).strip().lower()
+
+
+def repair_text(value):
+    if not isinstance(value, str) or not any(marker in value for marker in MOJIBAKE_MARKERS):
+        return value
+    best = value
+    best_badness = sum(best.count(marker) for marker in MOJIBAKE_MARKERS)
+    for source_encoding in ("latin1", "cp1252"):
+        try:
+            candidate = value.encode(source_encoding).decode("utf-8")
+        except Exception:
+            continue
+        candidate_badness = sum(candidate.count(marker) for marker in MOJIBAKE_MARKERS)
+        if candidate_badness < best_badness:
+            best = candidate
+            best_badness = candidate_badness
+    return best
+
+
+def repair_value(value):
+    if isinstance(value, dict):
+        return {k: repair_value(v) for k, v in value.items()}
+    if isinstance(value, list):
+        return [repair_value(v) for v in value]
+    if isinstance(value, str):
+        return repair_text(value)
+    return value
+
+
+def extract_additives(text: str):
     if not text:
-        return ''
-    text = unicodedata.normalize('NFD', str(text))
-    text = re.sub(r'[\u0300-\u036f]', '', text)
-    return text.lower().strip()
+        return []
+    found = []
+    for digits, suffix in ADDITIVE_RE.findall(text.upper()):
+        suffix = suffix.upper()
+        if suffix in ROMAN_SUFFIXES:
+            suffix = ""
+        found.append(f"E-{digits}{suffix}")
+    return sorted(set(found))
 
 
-def load_json(path, encoding='utf-8-sig'):
-    try:
-        with open(path, encoding=encoding) as f:
-            return json.load(f)
-    except FileNotFoundError:
-        return None
+def choose_raw_file() -> Path:
+    for path in RAW_CANDIDATES:
+        if path.exists():
+            return path
+    raise FileNotFoundError("No se encontró data-mercadona-ean.json ni data-mercadona-raw.json")
 
 
-def main():
-    base_dir = os.path.dirname(os.path.abspath(__file__))
+raw_file = choose_raw_file()
+raw_products = repair_value(load_json(raw_file))
+enriched_products = repair_value(load_json(ENRICHED_FILE))
 
-    # ---- Load base catalog (prefer file with EANs) ----
-    base = load_json(os.path.join(base_dir, 'data-mercadona-ean.json'))
-    base_label = 'data-mercadona-ean.json'
-    if base is None:
-        base = load_json(os.path.join(base_dir, 'data-mercadona-raw.json'))
-        base_label = 'data-mercadona-raw.json (no EANs)'
+by_ean = {}
+for item in enriched_products:
+    ean = str(item.get("ean") or "").strip()
+    if ean:
+        by_ean[ean] = item
 
-    if base is None:
-        print('ERROR: no base catalog found (data-mercadona-ean.json or data-mercadona-raw.json)')
-        sys.exit(1)
+by_name_cat = {}
+for item in enriched_products:
+    key = (normalize(item.get("nombre", "")), normalize(item.get("categoria", "")))
+    by_name_cat[key] = item
 
-    has_ean = 'ean' in (base[0] if base else {})
-    print(f"Base: {base_label} — {len(base)} products, has_ean={has_ean}")
+merged = []
+for base in raw_products:
+    ean = str(base.get("ean") or "").strip()
+    src = by_ean.get(ean)
+    if src is None:
+        key = (normalize(base.get("nombre", "")), normalize(base.get("categoria", "")))
+        src = by_name_cat.get(key)
 
-    # ---- Load enriched subset ----
-    enriched = load_json(os.path.join(base_dir, 'data-final.json'))
-    if enriched is None:
-        print('ERROR: data-final.json not found')
-        sys.exit(1)
-    print(f"Enriched: data-final.json — {len(enriched)} products")
+    ingredientes = (base.get("ingredientes") or "").strip() or None
+    aditivos_off = src.get("aditivos") if src else []
+    if not isinstance(aditivos_off, list):
+        aditivos_off = []
+    aditivos_ingredientes = extract_additives(ingredientes or "")
+    aditivos = aditivos_off or aditivos_ingredientes
 
-    # ---- Normalize enriched data ----
-    for p in enriched:
-        # Normalize aditivos: PS outputs {} for empty arrays, single strings for one additive
-        a = p.get('aditivos')
-        if isinstance(a, dict):
-            p['aditivos'] = []
-        elif isinstance(a, str):
-            p['aditivos'] = [a]
+    if src is not None:
+        score_cobertura = "completa"
+        fuente_datos = "off"
+        aditivos_fuente = "off" if aditivos_off else ("ingredientes" if aditivos_ingredientes else None)
+    elif ingredientes:
+        score_cobertura = "parcial"
+        fuente_datos = "mercadona"
+        aditivos_fuente = "ingredientes" if aditivos_ingredientes else None
+    else:
+        score_cobertura = "sin_datos"
+        fuente_datos = "mercadona"
+        aditivos_fuente = None
 
-    # ---- Build lookups ----
-    enriched_by_ean = {}
-    for p in enriched:
-        ean = str(p.get('ean', '')).strip().strip('"').strip("'")
-        if ean:
-            enriched_by_ean[ean] = p
+    item = {
+        "id": base.get("id"),
+        "nombre": base.get("nombre"),
+        "categoria": base.get("categoria"),
+        "subcategoria": base.get("subcategoria"),
+        "precio": base.get("precio"),
+        "ean": ean or None,
+        "ingredientes": ingredientes,
+        "aditivos": aditivos,
+        "aditivos_fuente": aditivos_fuente,
+        "fuente_datos": fuente_datos,
+        "score_disponible": score_cobertura != "sin_datos",
+        "score_cobertura": score_cobertura,
+    }
 
-    enriched_by_name = {}
-    for p in enriched:
-        key = f"{normalize(p.get('nombre', ''))}|{normalize(p.get('categoria', ''))}"
-        enriched_by_name[key] = p
+    if src:
+        for field in NUTRITION_FIELDS:
+            item[field] = src.get(field)
+    else:
+        for field in NUTRITION_FIELDS:
+            item[field] = None
 
-    # ---- Merge ----
-    merged = []
-    match_ean = match_name = no_match = 0
+    merged.append(item)
 
-    for p in base:
-        ean_val = str(p.get('ean', '')).strip().strip('"').strip("'") if has_ean else ''
+OUTPUT_FILE.write_text(json.dumps(merged, ensure_ascii=False, indent=2), encoding="utf-8")
 
-        entry = {
-            'id': p.get('id'),
-            'nombre': p.get('nombre', ''),
-            'slug': p.get('slug'),
-            'precio': p.get('precio'),
-            'categoria': p.get('categoria', ''),
-            'subcategoria': p.get('subcategoria'),
-            'ean': ean_val,
-        }
-
-        src = None
-
-        if ean_val and ean_val in enriched_by_ean:
-            src = enriched_by_ean[ean_val]
-            match_ean += 1
-
-        if src is None:
-            key = f"{normalize(entry['nombre'])}|{normalize(entry['categoria'])}"
-            if key in enriched_by_name:
-                src = enriched_by_name[key]
-                match_name += 1
-
-        if src is not None:
-            for f in NUTRITIONAL_FIELDS:
-                v = src.get(f)
-                if f == 'aditivos' and isinstance(v, dict):
-                    v = []
-                entry[f] = v
-            entry['score_disponible'] = True
-            entry['fuente_datos'] = 'off'
-        else:
-            for f in NUTRITIONAL_FIELDS:
-                entry[f] = [] if f == 'aditivos' else None
-            entry['score_disponible'] = False
-            entry['fuente_datos'] = 'mercadona'
-            no_match += 1
-
-        merged.append(entry)
-
-    # ---- Write output ----
-    out_path = os.path.join(base_dir, 'data-completo.json')
-    with open(out_path, 'w', encoding='utf-8') as f:
-        json.dump(merged, f, ensure_ascii=False, indent=2)
-
-    kb = os.path.getsize(out_path) / 1024
-    scored = sum(1 for e in merged if e['score_disponible'])
-
-    print(f"\nWritten: data-completo.json ({kb:.1f} KB)")
-    print(f"  Total:               {len(merged)}")
-    print(f"  Match by EAN:        {match_ean}")
-    print(f"  Match by name:       {match_name}")
-    print(f"  Mercadona-only:      {no_match}")
-    print(f"  score_disponible:    {scored}")
-    print("OK")
-
-
-if __name__ == '__main__':
-    main()
+count_full = sum(1 for p in merged if p["score_cobertura"] == "completa")
+count_partial = sum(1 for p in merged if p["score_cobertura"] == "parcial")
+count_none = sum(1 for p in merged if p["score_cobertura"] == "sin_datos")
+print(
+    f"OK: {OUTPUT_FILE.name} generado con {len(merged)} productos "
+    f"({count_full} completos, {count_partial} parciales, {count_none} sin datos)"
+)
